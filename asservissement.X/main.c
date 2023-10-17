@@ -64,8 +64,10 @@
 /*      Global variables        */
 
 // 12 = nb points coder ; 4 because the QEI mode is x4 ; angle in radians = 0.1309
-const double angle_coder = 360.0 / 12.0 / 4.0 * // degrees
-                                        /* PI */ 3.1415926535897932384626433 / 180; // Rad
+#define ANGLE_CODER 360.0 / 12.0 / 4.0 * 3.1415926535897932384626433 / 180 
+
+// 0.01 == time between 2 calls of the timer interrupt
+const float rotating_speed_coef = ANGLE_CODER / 0.01;
 
 int old_position = 0; // Previous position of the encoder
 
@@ -137,7 +139,7 @@ void init_QEI(void)
  * @param duty: wanted duty cycle of the pwm
  * 0 <= duty <=1
  */
-void set_duty_cycle(double duty) // 0 - 1
+void set_duty_cycle(double duty)
 {
     // MDC = Duty cycle register
     // PTPER = Period register
@@ -170,7 +172,7 @@ void speed_rotation_measure()
     // Calculate the rotating speed in rad/s ; 
     // 0.01 being the time between to call of the function in s
     // Around 670 rad/s at max speed
-    int rotating_speed = (current_position - old_position) * angle_coder / 0.01;
+    int rotating_speed = (current_position - old_position) * rotating_speed_coef;
     
     old_position = current_position;
     
