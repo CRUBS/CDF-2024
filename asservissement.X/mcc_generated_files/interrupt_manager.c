@@ -52,6 +52,9 @@
 */
 void INTERRUPT_Initialize (void)
 {
+    //    TI: Timer 2
+    //    Priority: 5
+        IPC1bits.T2IP = 5;
     //    TI: Timer 1
     //    Priority: 7
         IPC0bits.T1IP = 7;

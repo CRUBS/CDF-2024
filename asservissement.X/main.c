@@ -59,6 +59,7 @@
 */
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/tmr1.h"
+#include "mcc_generated_files/tmr2.h"
 #include <stdio.h>
 
 /*      Global variables        */
@@ -71,7 +72,8 @@ const float rotating_speed_coef = ANGLE_CODER / 0.01;
 
 int old_position = 0; // Previous position of the encoder
 
-int c=0;
+int speed_count = 0; // Sum of the speed
+uint8_t speed_measure_count = 0; // Number of times speed_rotation_measure is called
 
 /*      Initialisation functions       */
 
@@ -160,6 +162,16 @@ void set_rotation_clockwise(bool clockwise)
 }
 
 /*
+ * Toggle the state of the led on pin RB5
+ */
+void toggle_led_state()
+{
+    _LATB5 = !_LATB5;
+}
+
+/*      Callback functions      */
+
+/*
  * Callback function called by the timer1 interrupts each 10 ms 
  * for calculating the rotating speed of the motor
  */
@@ -176,12 +188,21 @@ void speed_rotation_measure()
     
     old_position = current_position;
     
-    c++;
-    if (c>=10)
-    {
-        printf("%d\n", rotating_speed);
-        c=0;
-    }
+    speed_count += rotating_speed;
+    speed_measure_count ++;
+}
+
+/*
+ * Callback function called by the timer2 interrupts each 100 ms
+ * for sending the average rotating speed of the motor
+ * Toggle the state of the led on pin RB5 at each call
+ */
+void send_average_speed()
+{
+    printf("%d\n", speed_count / speed_measure_count);
+    toggle_led_state();
+    speed_count = 0;
+    speed_measure_count = 0;
 }
 
 /*
@@ -195,12 +216,14 @@ int main(void)
     init_PWM();
     
     // Set complementary parameters
-    TMR1_SetInterruptHandler(&speed_rotation_measure);    
+    TMR1_SetInterruptHandler(&speed_rotation_measure);  
+    TMR2_SetInterruptHandler(&send_average_speed);
     set_duty_cycle(0.75);
     set_rotation_clockwise(true);
     
     // Start modules
     TMR1_Start();
+    TMR2_Start();
     
     while (1)
     {
