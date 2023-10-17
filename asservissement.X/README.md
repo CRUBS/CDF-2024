@@ -27,7 +27,7 @@ Ici se trouve le code pour l'asservissement en vitesse des moteurs DC du robot. 
 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5NV3uVCUAZrtTarMT_Dgnukuh14O-aW9hdIFImqMjc2ezAOAG9l8v8b2ALXUv77fiyNg&usqp=CAU" alt="drawing" height="150">
 </p>
 
-L'objectif de l'asservissement est de s'assurer que la vitesse de rotation du moteur sera bien celle qui est attendu. Pour cela, la présence d'un encodeur  est nécessaire afin d'avoir un retour quant à la vitesse de rotation du moteur puis adapter la consigne de tension pour atteindre la vitesse de rotation attendue.
+L'objectif de l'asservissement est de s'assurer que la vitesse de rotation du moteur sera bien celle qui est attendu. Pour cela, la présence d'un encodeur  est nécessaire afin d'avoir un retour quant à la vitesse de rotation du moteur puis adapter la consigne de tension pour atteindre la vitesse de rotation attendue. Le moteur sera contrôlé par un [pont en H L298N](https://www.sparkfun.com/datasheets/Robotics/L298_H_Bridge.pdf).
 
 
 L'asservissement est réalisé avec un moteur DC allant à 156 tours/min en sortie de réducteur et à 6450 tours/min avant réducteur. L'encodeur utilisé est un encodeur incrémental 12 points. Vous pouvez trouver à [ce lien](https://www.posital.com/fr/produits/interface-de-communication/incremental/incremental-encoder.php) une explication du fonctionnement d'un encodeur. Il est à noter que notre encodeur ne possède pas de signal zéro (ou home).
@@ -148,10 +148,49 @@ void set_duty_cycle(double duty)
 }
 ```
 
+Pour définir le sens de rotation du moteur, nous allons définir deux pins en tant que sortie dans le *Pin Manager*. Nous choisissons les pins RB12 et RB13. Dans le *Pin Module*, nous allons mettre l'un des deux pin en valeur haute au démarrage en cochant la case. Une fois le code généré, nous nous rendons dans le fichier main et créons une fonction pour définir le sens de rotation du moteur.
+
+```c
+/*
+ * Set the rotating direction of the motor
+ * @param clockwise: set the rotating direction of the motor clockwise
+ * The rotating direction set here may not be really it depending how the motor is cabled
+ */
+void set_rotation_clockwise(bool clockwise)
+{
+    // Set or reset RB12 and RB13 
+    LATBbits.LATB12 = clockwise;
+    LATBbits.LATB13 = !clockwise;
+}
+```
+
 <span id="Encodeur"><span>
 ### Lecture de l'encodeur
 
-TODO
+La PWM est maintenant générée et nous pouvons donc contrôler le moteur à différentes vitesses. Nous allons voir comment lire la vitesse de rotation du moteur à partir de l'encodeur. Pour cela, un [module QEI](https://ww1.microchip.com/downloads/en/DeviceDoc/70000601c.pdf) (Quadrature Encoder Interface) est disponible sur les dsPIC, mais ne peut pas être défini depuis MCC.
+
+Nous commençons par définir, dans le *Pin Manager*, les pins QEA et QEB sur les pins RB10 et RB11 en tant qu'entrées. Ces pins ont été choisis car ils sont tolérant jusqu'à 5 V et notre encodeur renvoie une tension de 5 V. Une fois le code généré, nous nous rendons dans le fichier main et créons une fonction pour initialiser le module QEI.
+
+```c
+/*
+ * Initilisation of the QEI
+ */
+void init_QEI(void)
+{
+    RPINR14 = 0x2a2b; // Set QEI on RB10 and RB11 (pins 21 and 22)
+    
+    // Set parameters
+    QEI1CONbits.CCM    = 0; // Counter Control Mode Selection bits set as x4 mode
+    QEI1CONbits.INTDIV = 7; // Timer clock prescaler set as 1:128
+    QEI1CONbits.IMV    = 0; // Index match value
+    QEI1IOCbits.FLTREN = 0; // Deactivate filter
+    QEI1CONbits.PIMOD  = 0; // Position counter is unaffected by the Index input
+    QEI1IOCbits.SWPAB  = 0; // Don't swap QEA and QEB
+    QEI1CONbits.QEIEN  = 1; // Enable QEI module
+}
+```
+
+Une fois la fonction exécutée, la lecture de la vitesse de rotation du moteur sera réalisée. La variable `POS1CNTL` sera incrémentée à chaque impulsion de l'encodeur. Le traitement sera vu dans la partie [Utilisation des timers](#Timers).
 
 <span id="Timers"><span>
 ### Utilisation des timers
