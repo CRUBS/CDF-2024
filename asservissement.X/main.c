@@ -66,14 +66,21 @@
 
 // 12 = nb points coder ; 4 because the QEI mode is x4 ; angle in radians = 0.1309
 #define ANGLE_CODER 360.0 / 12.0 / 4.0 * 3.1415926535897932384626433 / 180 
+#define TIME_INTERVAL 0.01 // s
 
 // 0.01 == time between 2 calls of the timer interrupt
-const float rotating_speed_coef = ANGLE_CODER / 0.01;
+const float rotating_speed_coef = ANGLE_CODER / TIME_INTERVAL;
 
 int old_position = 0; // Previous position of the encoder
 
 int speed_count = 0; // Sum of the speed
 uint8_t speed_measure_count = 0; // Number of times speed_rotation_measure is called
+
+// PID variables
+const int kp = 10, ki = 20; const float kd = 0.3; // Coef PID
+volatile int previous_error = 0.0, integral = 0.0;
+volatile int rotating_speed_target = 0; // rad/s
+
 
 /*      Initialisation functions       */
 
@@ -123,6 +130,7 @@ void init_PWM()
 void init_QEI(void)
 {
     RPINR14 = 0x2a2b; // Set QEI on RB10 and RB11 (pins 21 and 22)
+    POS1CNTL = 0;
     
     // Set parameters
     QEI1CONbits.CCM    = 0; // Counter Control Mode Selection bits set as x4 mode
@@ -141,11 +149,14 @@ void init_QEI(void)
  * @param duty: wanted duty cycle of the pwm
  * 0 <= duty <=1
  */
-void set_duty_cycle(double duty)
+void set_duty_cycle(float duty)
 {
+    // duty must be between 0 and 1
+    if(duty < 0) duty = 0.0;
+    else if(duty > 1) duty = 1.0;
+    
     // MDC = Duty cycle register
     // PTPER = Period register
-    
     MDC = PTPER * duty;
 }
 
@@ -169,6 +180,49 @@ void toggle_led_state()
     _LATB5 = !_LATB5;
 }
 
+/*
+ * Set the rotating speed target of the motor.
+ * @param target
+ */
+void set_rotating_speed_target(int target)
+{
+    rotating_speed_target = target;
+    
+    // Set rotating direction
+    set_rotation_clockwise(target > 0);
+    
+    // Reset
+    integral = 0;
+    previous_error = 0;
+}
+
+/*
+ * Enslave the motor to rotate at the speed defined by rotating_speed_target
+ * depending on the current speed 
+ * @param speed: current rotating speed of the motor in rad/s
+ * @param time_interval: time between two controls
+ */
+void control_motor_speed(int speed, float time_interval)
+{
+    // Calculate the error between the target speed and current speed
+    int error = rotating_speed_target - speed;
+    if(rotating_speed_target < 0) error = -error;
+    
+    // Calculate the proportional term
+    int proportional = kp * error;
+    
+    // Calculate the integral term
+    integral += ki * error * time_interval;
+    
+    // Calculate the derivative term
+    float derivative = kd * (error - previous_error) / time_interval;
+    
+    // Change the rotating speed
+    set_duty_cycle((float) (proportional + integral + derivative) / 670.0);
+    
+    previous_error = error; // Update the error
+}
+
 /*      Callback functions      */
 
 /*
@@ -190,6 +244,8 @@ void speed_rotation_measure()
     
     speed_count += rotating_speed;
     speed_measure_count ++;
+    
+    control_motor_speed(rotating_speed, TIME_INTERVAL); // Enslave
 }
 
 /*
@@ -200,7 +256,9 @@ void speed_rotation_measure()
 void send_average_speed()
 {
     printf("%d\n", speed_count / speed_measure_count);
+    
     toggle_led_state();
+    
     speed_count = 0;
     speed_measure_count = 0;
 }
@@ -218,8 +276,8 @@ int main(void)
     // Set complementary parameters
     TMR1_SetInterruptHandler(&speed_rotation_measure);  
     TMR2_SetInterruptHandler(&send_average_speed);
-    set_duty_cycle(0.75);
-    set_rotation_clockwise(true);
+    
+    set_rotating_speed_target(452);
     
     // Start modules
     TMR1_Start();
@@ -227,7 +285,7 @@ int main(void)
     
     while (1)
     {
-        // Nothing to do, everything is handled by interrupts
+        // Nothing to do, everything is handled by interrupts 
     }
     
     // If we got here, a problem appeared

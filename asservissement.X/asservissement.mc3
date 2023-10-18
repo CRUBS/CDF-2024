@@ -4709,7 +4709,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="TMR1" registerAlias="TI" settingAlias="priority"/>
-         <value>7</value>
+         <value>6</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="TMR1" registerAlias="TMR" settingAlias="TMR"/>
@@ -5442,16 +5442,16 @@
          <hash>291349d122538cf6d60171eb83b93e3b0b3fb6e49a42f90c4fd2ba589148d674</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files/reset.h</file>
-         <hash>5a04cf1b4dcbf53932376e9507d4ea40e8f5289c8e4de1de79957f7560e84ee1</hash>
-      </entry>
-      <entry>
          <file>main.c</file>
          <hash>ff731902e381cb09cc86b91be42eaf007cb40103cffb93a573cd2f082b2c4bad</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/system.c</file>
-         <hash>ef3842d3a553dd42aeee1a7c72b7760faf2408c8bd3f91786323ac5cccacf2af</hash>
+         <hash>e8ec5a7230f804eb5d1fc2d3faccb1d367ac86858e18a2e94cd987449e483e68</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/reset.h</file>
+         <hash>5a04cf1b4dcbf53932376e9507d4ea40e8f5289c8e4de1de79957f7560e84ee1</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/tmr1.h</file>
@@ -5482,16 +5482,16 @@
          <hash>96c0e19282372d8e12afbd299229826b8e87a8a130529b1f6f275671e682c46c</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files/reset_types.h</file>
-         <hash>b1b2c52ddd02b681d2132e2e7a6c365ae3ed8aaa906c0a2e4d78bc25282e0fa4</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files/system_types.h</file>
          <hash>0d2c8a4e7c39dc7d177f681a9c46dfad6aae9e1a3f95dc1302bbab3e14e6289c</hash>
       </entry>
       <entry>
+         <file>mcc_generated_files/reset_types.h</file>
+         <hash>b1b2c52ddd02b681d2132e2e7a6c365ae3ed8aaa906c0a2e4d78bc25282e0fa4</hash>
+      </entry>
+      <entry>
          <file>mcc_generated_files/mcc.h</file>
-         <hash>9c934be38b0e9f0232f5e308d599b5e275c632937b3cf197a669701fc4207297</hash>
+         <hash>7daaf7f41012ed1de45c42f034f13c922753fed180848d3d00346ca558053a4b</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/system.h</file>
@@ -5499,15 +5499,15 @@
       </entry>
       <entry>
          <file>mcc_generated_files/interrupt_manager.c</file>
-         <hash>6c8d57442dcf4e1e7a5f68fafcc9dd761ea328b388fa38e45d3aee3ac1e34bff</hash>
-      </entry>
-      <entry>
-         <file>mcc_generated_files/uart1.c</file>
-         <hash>c332562a279911e4894e287fbb2cd911c23cbec03bfeea8e2d6a3d0ac88cf7a5</hash>
+         <hash>9973966489f4fbfe25e2a9a80ba94c1954fd5c73c0b227358036f771e4b492f0</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/mcc.c</file>
          <hash>9b883fa7f00040463328761de9ca52648ada338314031bc18302ce7d75b3f861</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/uart1.c</file>
+         <hash>c332562a279911e4894e287fbb2cd911c23cbec03bfeea8e2d6a3d0ac88cf7a5</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/pin_manager.c</file>
