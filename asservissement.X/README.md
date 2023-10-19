@@ -87,7 +87,7 @@ Cliquez sur le bouton *Generate* en haut à gauche pour générer le code comme 
 
 Un fichier main.c a été généré et nous allons le modifier pour faire fonctionner la PWM. Se référer à la [documentation PWM](https://ww1.microchip.com/downloads/en/DeviceDoc/dsPIC33-PIC24-FRM-High-Speed-PWM-DS70000645.pdf) pour plus de détails quant au paramétrage.
 
-Nous allons créer une fonction *init_PWM* pour initialiser la PWM. Cette fonction sera à appeler dans le main et la PWM fonctionnera. Nous définissons une PWM à 2 kHz avec un rapport cyclique de 50 %. 
+Nous allons créer une fonction *init_PWM* pour initialiser la PWM. Cette fonction sera à appeler dans le main et la PWM fonctionnera. Nous définissons une PWM à 2 kHz avec un rapport cyclique de 50 %.  
 
 ```c
 /*
@@ -131,6 +131,12 @@ void init_PWM()
 }
 ```
 
+La valeur à mettre dans le registre `PTPER` pour choisir la période de la PWM se fait avec la formule suivante : 
+
+<p align="center">
+<img width="673" alt="image" src="https://github.com/CRUBS/CDF-2024/assets/77966063/3e0538dc-9c32-4963-b192-88dd0d6ac388">
+</p>
+
 Nous allons aussi définir une fonction *set_duty_cycle* pour modifier le rapport cyclique de la PWM.
 
 ```c
@@ -139,11 +145,14 @@ Nous allons aussi définir une fonction *set_duty_cycle* pour modifier le rappor
  * @param duty: wanted duty cycle of the pwm
  * 0 <= duty <=1
  */
-void set_duty_cycle(double duty)
+void set_duty_cycle(float duty)
 {
+    // duty must be between 0 and 1
+    if(duty < 0) duty = 0.0;
+    else if(duty > 1) duty = 1.0;
+    
     // MDC = Duty cycle register
     // PTPER = Period register
-    
     MDC = PTPER * duty;
 }
 ```
@@ -194,6 +203,152 @@ Une fois la fonction exécutée, la lecture de la vitesse de rotation du moteur 
 
 <span id="Timers"><span>
 ### Utilisation des timers
+
+Nous allons paramétrer un premier timer qui lèvera une interruption toutes les 10 ms afin de procéder à l'asservissement en fonction de la vitesse de rotation du moteur durant les 10 dernières millisecondes. Pour configurer le timer, nous allons utiliser MCC où depuis la fenêtre *Device Resources*, nous ajoutons le timer1. Le paramétrage est montré dans l'image suivante : 
+
+<p align="center">
+<img width="600" alt="image" src="https://github.com/CRUBS/CDF-2024/assets/77966063/b79855ab-705a-4ce3-ab93-245d6f091c04">
+</p>
+
+Une fois le code générer, nous modifions le fichier main. Voici le code à ajouter :
+
+```c
+#include "mcc_generated_files/tmr1.h"
+
+// 12 = nb points coder ; 4 because the QEI mode is x4 ; angle in radians = 0.1309
+#define ANGLE_CODER 360.0 / 12.0 / 4.0 * 3.1415926535897932384626433 / 180 
+#define TIME_INTERVAL 0.01 // s
+
+// 0.01 == time between 2 calls of the timer interrupt
+const float rotating_speed_coef = ANGLE_CODER / TIME_INTERVAL;
+
+int old_position = 0; // Previous position of the encoder
+
+// PID variables
+const int kp = 10, ki = 20; const float kd = 0.3; // Coef PID
+volatile int previous_error = 0.0, integral = 0.0;
+volatile int rotating_speed_target = 0; // rad/s
+
+/*
+ * Callback function called by the timer1 interrupts each 10 ms 
+ * for calculating the rotating speed of the motor
+ */
+void speed_rotation_measure()
+{
+    IFS0bits.T1IF = 0;   // Clear timer 1 interrupt flag
+    
+    int current_position = (int) POS1CNTL; // Get the pulse count
+    
+    // Calculate the rotating speed in rad/s ; 
+    // 0.01 being the time between to call of the function in s
+    // Around 670 rad/s at max speed
+    int rotating_speed = (current_position - old_position) * rotating_speed_coef;
+    
+    old_position = current_position;
+    
+    speed_count += rotating_speed;
+    speed_measure_count ++;
+    
+    control_motor_speed(rotating_speed, TIME_INTERVAL); // Enslave
+}
+```
+
+En définissant aussi les fonctions *set_rotating_speed_target* et *control_motor_speed* :
+
+```c
+/*
+ * Enslave the motor to rotate at the speed defined by rotating_speed_target
+ * depending on the current speed 
+ * @param speed: current rotating speed of the motor in rad/s
+ * @param time_interval: time between two controls
+ */
+void control_motor_speed(int speed, float time_interval)
+{
+    // Calculate the error between the target speed and current speed
+    int error = rotating_speed_target - speed;
+    if(rotating_speed_target < 0) error = -error;
+    
+    // Calculate the proportional term
+    int proportional = kp * error;
+    
+    // Calculate the integral term
+    integral += ki * error * time_interval;
+    
+    // Calculate the derivative term
+    float derivative = kd * (error - previous_error) / time_interval;
+    
+    // Change the rotating speed
+    set_duty_cycle((float) (proportional + integral + derivative) / 670.0);
+    
+    previous_error = error; // Update the error
+}
+
+/*
+ * Set the rotating speed target of the motor.
+ * @param target
+ */
+void set_rotating_speed_target(int target)
+{
+    rotating_speed_target = target;
+    
+    // Set rotating direction
+    set_rotation_clockwise(target > 0);
+    
+    // Reset
+    integral = 0;
+    previous_error = 0;
+}
+```
+
+Il n'y a plus qu'à ajouter les lignes suivantes dans le main afin de lancer l'asservissement du moteur à la vitesse demandée : 
+
+```c
+TMR1_SetInterruptHandler(&speed_rotation_measure); 
+set_rotating_speed_target(600);
+TMR1_Start();
+```
+
+Nous allons configurer un second timer afin de faire un retour quant à la vitesse du moteur durant les 100 dernières millisecondes. La configuration est sensiblement la même que pour le timer1, mais il faut changer le *Prescaler* pour *1:8* afin de pouvoir configurer une période de 100 ms.
+
+Nous nous rendons maintenant dans le *Interrupt Module* et nous définissons une priorité de 6 pour le timer1 et une priorité de 5 pour le timer2. Nous mettrons la priorité maximale pour la réception de message par bus CAN par la suite.
+
+Une fois le code généré, nous ajoutons le code suivant au fichier main (ne pas oublier de configurer la fonction de callback et de démarrer le timer dans la fonction main) :
+
+```c
+int speed_count = 0; // Sum of the speed
+uint8_t speed_measure_count = 0; // Number of times speed_rotation_measure is called
+
+/*
+ * Callback function called by the timer2 interrupts each 100 ms
+ * for sending the average rotating speed of the motor
+ * Toggle the state of the led on pin RB5 at each call
+ */
+void send_average_speed()
+{
+    
+    //printf("%d\n", speed_count / speed_measure_count);
+    
+    CAN_MSG_OBJ msg;
+    if(CAN_CONFIGURATION_MODE == CAN1_OperationModeGet())
+    {
+        if(CAN_OP_MODE_REQUEST_SUCCESS == CAN1_OperationModeSet(CAN_NORMAL_2_0_MODE))
+        {
+            msg.msgId = 0x1FFFF;
+            msg.field.frameType = CAN_FRAME_DATA;
+            msg.field.idType = CAN_FRAME_EXT;
+            msg.field.dlc = CAN_DLC_8;
+            msg.data = 1;
+
+            CAN1_Transmit(CAN_PRIORITY_HIGH, &msg);
+        }
+    }
+    
+    toggle_led_state();
+    
+    speed_count = 0;
+    speed_measure_count = 0;
+}
+``` 
 
 TODO
 
