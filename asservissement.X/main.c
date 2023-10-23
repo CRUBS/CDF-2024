@@ -66,7 +66,7 @@
 
 // 12 = nb points coder ; 4 because the QEI mode is x4 ; angle in radians = 0.1309
 #define ANGLE_CODER 360.0 / 12.0 / 4.0 * 3.1415926535897932384626433 / 180 
-#define TIME_INTERVAL 0.01 // s
+#define TIME_INTERVAL 0.012 // s
 
 // 0.01 == time between 2 calls of the timer interrupt
 const float rotating_speed_coef = ANGLE_CODER / TIME_INTERVAL;
@@ -182,7 +182,8 @@ void toggle_led_state()
 
 /*
  * Set the rotating speed target of the motor.
- * @param target
+ * @param target: wanted rotating speed of the motor, 
+ * if <0, the motor rotate in the other direction
  */
 void set_rotating_speed_target(int target)
 {
@@ -226,7 +227,7 @@ void control_motor_speed(int speed, float time_interval)
 /*      Callback functions      */
 
 /*
- * Callback function called by the timer1 interrupts each 10 ms 
+ * Callback function called by the timer1 interrupts each 12 ms 
  * for calculating the rotating speed of the motor
  */
 void speed_rotation_measure()
@@ -277,7 +278,7 @@ int main(void)
     TMR1_SetInterruptHandler(&speed_rotation_measure);  
     TMR2_SetInterruptHandler(&send_average_speed);
     
-    set_rotating_speed_target(452);
+    set_rotating_speed_target(-152);
     
     // Start modules
     TMR1_Start();

@@ -204,7 +204,7 @@ Une fois la fonction exécutée, la lecture de la vitesse de rotation du moteur 
 <span id="Timers"><span>
 ### Utilisation des timers
 
-Nous allons paramétrer un premier timer qui lèvera une interruption toutes les 10 ms afin de procéder à l'asservissement en fonction de la vitesse de rotation du moteur durant les 10 dernières millisecondes. Pour configurer le timer, nous allons utiliser MCC où depuis la fenêtre *Device Resources*, nous ajoutons le timer1. Le paramétrage est montré dans l'image suivante : 
+Nous allons paramétrer un premier timer qui lèvera une interruption toutes les 12 ms afin de procéder à l'asservissement en fonction de la vitesse de rotation du moteur durant les 12 dernières millisecondes. Pour configurer le timer, nous allons utiliser MCC où depuis la fenêtre *Device Resources*, nous ajoutons le timer1. Le paramétrage est montré dans l'image suivante : 
 
 <p align="center">
 <img width="600" alt="image" src="https://github.com/CRUBS/CDF-2024/assets/77966063/b79855ab-705a-4ce3-ab93-245d6f091c04">
@@ -285,7 +285,8 @@ void control_motor_speed(int speed, float time_interval)
 
 /*
  * Set the rotating speed target of the motor.
- * @param target
+ * @param target: wanted rotating speed of the motor, 
+ * if <0, the motor rotate in the other direction
  */
 void set_rotating_speed_target(int target)
 {
@@ -307,6 +308,8 @@ TMR1_SetInterruptHandler(&speed_rotation_measure);
 set_rotating_speed_target(600);
 TMR1_Start();
 ```
+
+En rentrant une valeur négative en paramètre de la fonction ```set_rotating_speed```, le moteur sera asservi pour tourner dans l'autre sens.
 
 Nous allons configurer un second timer afin de faire un retour quant à la vitesse du moteur durant les 100 dernières millisecondes. La configuration est sensiblement la même que pour le timer1, mais il faut changer le *Prescaler* pour *1:8* afin de pouvoir configurer une période de 100 ms.
 
@@ -350,8 +353,6 @@ void send_average_speed()
 }
 ``` 
 
-TODO
-
 <span id="CAN"><span>
 ### Utilisation du bus CAN
 
@@ -359,6 +360,12 @@ TODO
 
 <span id="Branchements"><span>
 ## Branchements du PIC
+
+La configuration minimale des branchements du PIC est montrée dans l'image ci-dessous avec les branchements avec le Pickit 3 à gauche. Ce dernier permet de programmer le PIC.
+
+<p align="center">
+<img src="https://github.com/CRUBS/CDF-2024/assets/77966063/04a4bd4b-d3e9-432b-a8ee-341795e5c27e">
+</p>
 
 TODO
 
