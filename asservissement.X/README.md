@@ -35,8 +35,20 @@ L'asservissement est réalisé avec un moteur DC allant à 156 tours/min en sort
 <span id="PID"><span>
 ## Création du PID
 
-TODO
+L'objectif de cet asservissement est d'avoir un système stable avec un dépassement nul ou quasi-nul, aucun dépassement statique et un temps de réponse le plus faible possible mais inférieur à 200 ms.
 
+Afin de répondre à ces exigences nous avons mis en place un PID (Proportional Integral Derivator) doté de 3 facteur kp, ki et kd. Leur impact sur l'asserviseement est décrit ci-dessous pour plus d'information veuillez visiter [ce lien](http://www.ferdinandpiette.com/blog/2011/08/implementer-un-pid-sans-faire-de-calculs/)
+
+    L'erreur statique, c'est l'erreur finale une fois que le système est stabilité. Cette erreur doit être nulle. Pour diminuer l'erreur statique, il faut augmenter Kp et Ki.
+    Le dépassement, c'est le rapport entre le premier pic et la consigne. Ce dépassement diminue si Kp ou Ki diminuent ou si Kd augmente.
+    Le temps de montée correspond au temps qu'il faut pour arriver ou dépasser à la consigne. Le temps de montée diminue si Kp ou Ki augmentent ou si Kd diminue.
+    Le temps de stabilisation, c'est le temps qu'il faut pour que le signal commette une erreur inférieure à 5% de la consigne. Ce temps de stabilisation diminue quand Kp et Ki augmentent.
+
+Afin de prédimmensionner ces valeurs nous avons simuler le système sur Scilab ce qui nous a donné kp=100, ki=2 et kd=2.
+
+Afin de pouvoir faire cela nous avons dû identifier le comportment du moteur pour cela nous avons mis en entrée une tension de 12V et print la vitesse renvoyé par l'encodeur toutes les 20 ms. À partir de là, nous avons déterminé le gain K et le temps de réponse Tau du moteur. Nous avons supposé que le moteur se comportait comme un premier ordre car avec notre résolution de valeur la différence n'est pas détectable. 
+
+Ensuite nous avons appliqué ces variables au moteur et les avons ajuster à tatons afin d'obtenir le comportement souhaité ce qui nous a donné kp=10, ki=20 et kd=0.3. En conclusion la simulation par Scilab n'est pas nécessaire si la stabilité du système lors des essais n'est pas obligatoire.
 <span id="Programmation"><span>
 ## Programmation du PIC
 
