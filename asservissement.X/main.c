@@ -60,13 +60,16 @@
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/tmr1.h"
 #include "mcc_generated_files/tmr2.h"
+#include "mcc_generated_files/uart1.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 /*      Global variables        */
 
 // 12 = nb points coder ; 4 because the QEI mode is x4 ; angle in radians = 0.1309
 #define ANGLE_CODER 360.0 / 12.0 / 4.0 * 3.1415926535897932384626433 / 180 
-#define TIME_INTERVAL 0.012 // s
+#define TIME_INTERVAL 0.012 // time between two call of interrupt of timer 1 in seconds
 
 // 0.01 == time between 2 calls of the timer interrupt
 const float rotating_speed_coef = ANGLE_CODER / TIME_INTERVAL;
@@ -80,6 +83,8 @@ uint8_t speed_measure_count = 0; // Number of times speed_rotation_measure is ca
 const int kp = 10, ki = 20; const float kd = 0.3; // Coef PID
 volatile int previous_error = 0.0, integral = 0.0;
 volatile int rotating_speed_target = 0; // rad/s
+
+uint8_t message[10];
 
 
 /*      Initialisation functions       */
@@ -231,13 +236,10 @@ void control_motor_speed(int speed, float time_interval)
  * for calculating the rotating speed of the motor
  */
 void speed_rotation_measure()
-{
-    IFS0bits.T1IF = 0;   // Clear timer 1 interrupt flag
-    
+{    
     int current_position = (int) POS1CNTL; // Get the pulse count
     
     // Calculate the rotating speed in rad/s ; 
-    // 0.01 being the time between to call of the function in s
     // Around 670 rad/s at max speed
     int rotating_speed = (current_position - old_position) * rotating_speed_coef;
     
@@ -265,6 +267,40 @@ void send_average_speed()
 }
 
 /*
+ * Callback function called when a serial message is received
+ */
+void serial_receive()
+{    
+    if(UART1_IsRxReady())
+    {
+        unsigned char message[] = "0000"; // To stock the message
+        
+        if(UART1_ReadBuffer(message, 4)) // Save the message into the variable
+        {
+            // Check the validity of the message
+            if((isdigit(message[0]) || message[0] == '-' ) && message[0] != '0')
+            {
+                int value = atoi((char*) message); // Get the integer value
+                if(-700 <= value && value <= 700) // Check the validity of the value
+                    set_rotating_speed_target(value);
+                else
+                    set_rotating_speed_target(0);
+            }
+            else 
+                set_rotating_speed_target(0);
+        }
+        else 
+            set_rotating_speed_target(0);
+    }
+    
+    // Clear the error if there is one
+    if (U1STAbits.OERR)
+    {
+        U1STAbits.OERR = 0;
+    }
+}
+
+/*
                          Main application
  */
 int main(void)
@@ -277,8 +313,9 @@ int main(void)
     // Set complementary parameters
     TMR1_SetInterruptHandler(&speed_rotation_measure);  
     TMR2_SetInterruptHandler(&send_average_speed);
+    UART1_SetRxInterruptHandler(&serial_receive);
     
-    set_rotating_speed_target(-152);
+    set_rotating_speed_target(-345);
     
     // Start modules
     TMR1_Start();
