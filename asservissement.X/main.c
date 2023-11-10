@@ -84,8 +84,11 @@ const int kp = 10, ki = 20; const float kd = 0.3; // Coef PID
 volatile int previous_error = 0.0, integral = 0.0;
 volatile int rotating_speed_target = 0; // rad/s
 
-uint8_t message[10];
-
+// Message variables
+#define MESSAGE_LEN 5
+char message[MESSAGE_LEN] = "$$$$$";
+uint8_t char_count = 0;
+bool is_negative = false;
 
 /*      Initialisation functions       */
 
@@ -95,13 +98,13 @@ uint8_t message[10];
 void init_PWM()
 {    
     /* Set PWM Period on Primary Time Base */
-    PTPER = 3684; // 500 us
+    PTPER = 3999; // 500 us
 
     /* Set Phase Shift */
     PHASE1 = 0;
 
     /* Set Duty Cycles */
-    MDC = 1842; // 50 %
+    MDC = 2000; // 50 %
 
     /* Set Dead Time Values */
     DTR1 = 0;
@@ -197,7 +200,7 @@ void set_rotating_speed_target(int target)
     // Set rotating direction
     set_rotation_clockwise(target > 0);
     
-    // Reset
+    // Reset PID variables
     integral = 0;
     previous_error = 0;
 }
@@ -212,7 +215,10 @@ void control_motor_speed(int speed, float time_interval)
 {
     // Calculate the error between the target speed and current speed
     int error = rotating_speed_target - speed;
-    if(rotating_speed_target < 0) error = -error;
+    
+    // Set the error with the right sign
+    if(rotating_speed_target < 0 || (rotating_speed_target == 0 && speed < 0)) 
+        error = -error;
     
     // Calculate the proportional term
     int proportional = kp * error;
@@ -223,7 +229,7 @@ void control_motor_speed(int speed, float time_interval)
     // Calculate the derivative term
     float derivative = kd * (error - previous_error) / time_interval;
     
-    // Change the rotating speed
+    // Change the rotating speed ; 670 is present to put the value between 0 and 1
     set_duty_cycle((float) (proportional + integral + derivative) / 670.0);
     
     previous_error = error; // Update the error
@@ -271,32 +277,34 @@ void send_average_speed()
  */
 void serial_receive()
 {    
-    if(UART1_IsRxReady())
-    {
-        unsigned char message[] = "0000"; // To stock the message
-        
-        if(UART1_ReadBuffer(message, 4)) // Save the message into the variable
-        {
-            // Check the validity of the message
-            if((isdigit(message[0]) || message[0] == '-' ) && message[0] != '0')
-            {
-                int value = atoi((char*) message); // Get the integer value
-                if(-700 <= value && value <= 700) // Check the validity of the value
-                    set_rotating_speed_target(value);
-                else
-                    set_rotating_speed_target(0);
-            }
-            else 
-                set_rotating_speed_target(0);
-        }
-        else 
-            set_rotating_speed_target(0);
-    }
-    
     // Clear the error if there is one
     if (U1STAbits.OERR)
     {
         U1STAbits.OERR = 0;
+        return;
+    }
+    
+    char received_char = U1RXREG; // Read the received char
+    
+    if (received_char == '$' || char_count >= MESSAGE_LEN) // If it is the end of the message
+    {
+        int value = atoi(message); // Get the integer value
+        if(is_negative) value = -value; // Set the value negative if it necessary
+        
+        set_rotating_speed_target(value); 
+        
+        // Clear the message to be ready for next message
+        for(int i = 0 ; i < MESSAGE_LEN ; i++)
+            message[i] = '$';
+        char_count = 0;
+        is_negative = false;
+    }
+    else if(received_char == '-') // If the value to be received is negative
+        is_negative = true;
+    else 
+    {
+        message[char_count] = received_char; // Store the received character
+        char_count ++;
     }
 }
 
@@ -315,7 +323,7 @@ int main(void)
     TMR2_SetInterruptHandler(&send_average_speed);
     UART1_SetRxInterruptHandler(&serial_receive);
     
-    set_rotating_speed_target(-345);
+    set_rotating_speed_target(340);
     
     // Start modules
     TMR1_Start();

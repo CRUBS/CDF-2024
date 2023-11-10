@@ -52,6 +52,9 @@
 */
 void INTERRUPT_Initialize (void)
 {
+    //    TI: Timer 2
+    //    Priority: 5
+        IPC1bits.T2IP = 5;
     //    UERI: UART1 Error
     //    Priority: 1
         IPC16bits.U1EIP = 1;
@@ -61,9 +64,6 @@ void INTERRUPT_Initialize (void)
     //    URXI: UART1 Receiver
     //    Priority: 7
         IPC2bits.U1RXIP = 7;
-    //    TI: Timer 2
-    //    Priority: 5
-        IPC1bits.T2IP = 5;
     //    TI: Timer 1
     //    Priority: 6
         IPC0bits.T1IP = 6;

@@ -110,8 +110,8 @@ void UART1_Initialize(void)
     U1MODE = (0x8008 & ~(1<<15));  // disabling UART ON bit
     // UTXISEL0 TX_ONE_CHAR; UTXINV disabled; OERR NO_ERROR_cleared; URXISEL RX_ONE_CHAR; UTXBRK COMPLETED; UTXEN disabled; ADDEN disabled; 
     U1STA = 0x00;
-    // BaudRate = 115200; Frequency = 1842500 Hz; BRG 3; 
-    U1BRG = 0x03;
+    // BaudRate = 115200; Frequency = 64000000 Hz; BRG 138; 
+    U1BRG = 0x8A;
     
     txHead = txQueue;
     txTail = txQueue;
