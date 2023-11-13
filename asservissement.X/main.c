@@ -63,7 +63,6 @@
 #include "mcc_generated_files/uart1.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 /*      Global variables        */
 
@@ -85,8 +84,8 @@ volatile int previous_error = 0.0, integral = 0.0;
 volatile int rotating_speed_target = 0; // rad/s
 
 // Message variables
-#define MESSAGE_LEN 5
-char message[MESSAGE_LEN] = "$$$$$";
+#define MESSAGE_LEN 4
+char message[MESSAGE_LEN] = "$$$$";
 uint8_t char_count = 0;
 bool is_negative = false;
 
@@ -286,7 +285,7 @@ void serial_receive()
     
     char received_char = U1RXREG; // Read the received char
     
-    if (received_char == '$' || char_count >= MESSAGE_LEN) // If it is the end of the message
+    if (received_char == '\n' || char_count >= MESSAGE_LEN) // If it is the end of the message
     {
         int value = atoi(message); // Get the integer value
         if(is_negative) value = -value; // Set the value negative if it necessary
