@@ -52,9 +52,15 @@
 */
 void INTERRUPT_Initialize (void)
 {
-    //    TI: Timer 2
-    //    Priority: 5
-        IPC1bits.T2IP = 5;
+    //    CI: ECAN1 Event
+    //    Priority: 7
+        IPC8bits.C1IP = 7;
+    //    CTXI: ECAN1 Transmit Data Request
+    //    Priority: 7
+        IPC17bits.C1TXIP = 7;
+    //    CRXI: ECAN1 Receive Data  Ready
+    //    Priority: 7
+        IPC8bits.C1RXIP = 7;
     //    UERI: UART1 Error
     //    Priority: 1
         IPC16bits.U1EIP = 1;
@@ -64,6 +70,15 @@ void INTERRUPT_Initialize (void)
     //    URXI: UART1 Receiver
     //    Priority: 7
         IPC2bits.U1RXIP = 7;
+    //    DMA0I: DMA Channel 0
+    //    Priority: 7
+        IPC1bits.DMA0IP = 7;
+    //    DMA3I: DMA Channel 3
+    //    Priority: 7
+        IPC9bits.DMA3IP = 7;
+    //    TI: Timer 2
+    //    Priority: 5
+        IPC1bits.T2IP = 5;
     //    TI: Timer 1
     //    Priority: 6
         IPC0bits.T1IP = 6;

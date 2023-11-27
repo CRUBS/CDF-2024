@@ -61,6 +61,7 @@
 #include "mcc_generated_files/tmr1.h"
 #include "mcc_generated_files/tmr2.h"
 #include "mcc_generated_files/uart1.h"
+#include "mcc_generated_files/can1.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -263,9 +264,30 @@ void speed_rotation_measure()
  */
 void send_average_speed()
 {
-    printf("%d\n", speed_count / speed_measure_count);
+    //printf("%d\n", speed_count / speed_measure_count);
+    uint8_t data[8] = {0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48};
+    CAN_MSG_OBJ msg;
+    msg.msgId = 0x1FFFF;
+    msg.field.frameType = CAN_FRAME_DATA;
+    msg.field.idType = CAN_FRAME_EXT;
+    msg.field.dlc = CAN_DLC_8;
+    msg.data = 0x65;
+    if(CAN1_IsTXErrorPassive())printf("passive\n");
+    if(CAN1_IsTxErrorActive())printf("active\n");
+    if(CAN1_IsTxErrorWarning())printf("Warning\n");
+    CAN1_OperationModeSet(CAN_CONFIGURATION_MODE);
     
-    toggle_led_state();
+        
+    if(CAN_CONFIGURATION_MODE == CAN1_OperationModeGet())
+    {
+        if(CAN_OP_MODE_REQUEST_SUCCESS == CAN1_OperationModeSet(CAN_NORMAL_2_0_MODE))
+        {
+            if(CAN1_Transmit(CAN_PRIORITY_HIGH, &msg) == 3)
+                toggle_led_state();
+        }
+        else printf("request\n");
+    }
+    else printf("config\n");
     
     speed_count = 0;
     speed_measure_count = 0;
@@ -307,6 +329,22 @@ void serial_receive()
     }
 }
 
+void can_receive_handler()
+{
+    toggle_led_state();
+    if(CAN1_ReceivedMessageCountGet() > 0) 
+    {
+        uint8_t data[8] = {0};
+        CAN_MSG_OBJ msg;
+        msg.data = data;
+        
+        if(CAN1_Receive(&msg))
+        {
+            printf("%s\n", msg.data);
+        }
+    }    
+}
+
 /*
                          Main application
  */
@@ -321,6 +359,10 @@ int main(void)
     TMR1_SetInterruptHandler(&speed_rotation_measure);  
     TMR2_SetInterruptHandler(&send_average_speed);
     UART1_SetRxInterruptHandler(&serial_receive);
+    CAN1_TransmitEnable();
+    CAN1_ReceiveEnable();
+    CAN1_OperationModeSet(CAN_CONFIGURATION_MODE);
+    CAN1_SetRxBufferInterruptHandler(&can_receive_handler);
     
     set_rotating_speed_target(340);
     

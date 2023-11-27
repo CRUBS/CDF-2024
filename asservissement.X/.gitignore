@@ -6,6 +6,10 @@ nbproject/
 defmplabxtrace.log
 defmplabxtrace.log.inx
 .generated_files/
+asservissement.mc3.*
+
+# VSCODE
+.vscode/
 
 # Apple auto generated files
 .DS_Store
