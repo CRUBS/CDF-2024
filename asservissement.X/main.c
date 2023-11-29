@@ -61,6 +61,8 @@
 #include "mcc_generated_files/tmr1.h"
 #include "mcc_generated_files/tmr2.h"
 #include "mcc_generated_files/uart1.h"
+#include "i2c.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -88,6 +90,8 @@ volatile int rotating_speed_target = 0; // rad/s
 char message[MESSAGE_LEN] = "$$$$";
 uint8_t char_count = 0;
 bool is_negative = false;
+const uint8_t i2c_address = 0x53;
+const uint8_t motor_speed_multiplier = 10;
 
 /*      Initialisation functions       */
 
@@ -149,7 +153,9 @@ void init_QEI(void)
     QEI1CONbits.QEIEN  = 1; // Enable QEI module
 }
 
+
 /*      Utilitarian functions       */
+
 
 /*
  * Set the duty cycle of the PWM
@@ -263,12 +269,13 @@ void speed_rotation_measure()
  */
 void send_average_speed()
 {
-    printf("%d\n", speed_count / speed_measure_count);
+    /*printf("%d\n", speed_count / speed_measure_count);
     
     toggle_led_state();
     
     speed_count = 0;
-    speed_measure_count = 0;
+    speed_measure_count = 0;*/
+    printf("%d\n", rotating_speed_target);
 }
 
 /*
@@ -307,6 +314,7 @@ void serial_receive()
     }
 }
 
+
 /*
                          Main application
  */
@@ -315,18 +323,25 @@ int main(void)
     // initialize the device
     init_QEI(); // Must be first for UART and CAN communication ; I don't know why 
     SYSTEM_Initialize();
+    I2C1_Initialize(i2c_address, motor_speed_multiplier);
     init_PWM();
     
     // Set complementary parameters
     TMR1_SetInterruptHandler(&speed_rotation_measure);  
     TMR2_SetInterruptHandler(&send_average_speed);
     UART1_SetRxInterruptHandler(&serial_receive);
+
+    // I2C parameters
+    I2C1_ReadPointerSet(&speed_count, &speed_measure_count);
+    uint8_t a = 0; // A variable to stock the received value
+    I2C1_WritePointerSet(&a);
+    I2C1_set_receive_handler(&set_rotating_speed_target);
     
-    set_rotating_speed_target(340);
+    set_rotating_speed_target(34);
     
     // Start modules
     TMR1_Start();
-    TMR2_Start();
+    //TMR2_Start();
     
     while (1)
     {

@@ -56,6 +56,152 @@
 */
 /**
   @Summary
+    Sets the GPIO pin, RA4, high using LATA4.
+
+  @Description
+    Sets the GPIO pin, RA4, high using LATA4.
+
+  @Preconditions
+    The RA4 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RA4 high (1)
+    LED_Receive_SetHigh();
+    </code>
+
+*/
+#define LED_Receive_SetHigh()          (_LATA4 = 1)
+/**
+  @Summary
+    Sets the GPIO pin, RA4, low using LATA4.
+
+  @Description
+    Sets the GPIO pin, RA4, low using LATA4.
+
+  @Preconditions
+    The RA4 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RA4 low (0)
+    LED_Receive_SetLow();
+    </code>
+
+*/
+#define LED_Receive_SetLow()           (_LATA4 = 0)
+/**
+  @Summary
+    Toggles the GPIO pin, RA4, using LATA4.
+
+  @Description
+    Toggles the GPIO pin, RA4, using LATA4.
+
+  @Preconditions
+    The RA4 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Toggle RA4
+    LED_Receive_Toggle();
+    </code>
+
+*/
+#define LED_Receive_Toggle()           (_LATA4 ^= 1)
+/**
+  @Summary
+    Reads the value of the GPIO pin, RA4.
+
+  @Description
+    Reads the value of the GPIO pin, RA4.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    uint16_t portValue;
+
+    // Read RA4
+    postValue = LED_Receive_GetValue();
+    </code>
+
+*/
+#define LED_Receive_GetValue()         _RA4
+/**
+  @Summary
+    Configures the GPIO pin, RA4, as an input.
+
+  @Description
+    Configures the GPIO pin, RA4, as an input.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RA4 as an input
+    LED_Receive_SetDigitalInput();
+    </code>
+
+*/
+#define LED_Receive_SetDigitalInput()  (_TRISA4 = 1)
+/**
+  @Summary
+    Configures the GPIO pin, RA4, as an output.
+
+  @Description
+    Configures the GPIO pin, RA4, as an output.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RA4 as an output
+    LED_Receive_SetDigitalOutput();
+    </code>
+
+*/
+#define LED_Receive_SetDigitalOutput() (_TRISA4 = 0)
+/**
+  @Summary
     Sets the GPIO pin, RB10, high using LATB10.
 
   @Description
@@ -786,13 +932,13 @@
 #define PWM_SetDigitalOutput() (_TRISB15 = 0)
 /**
   @Summary
-    Sets the GPIO pin, RB5, high using LATB5.
+    Sets the GPIO pin, RB4, high using LATB4.
 
   @Description
-    Sets the GPIO pin, RB5, high using LATB5.
+    Sets the GPIO pin, RB4, high using LATB4.
 
   @Preconditions
-    The RB5 must be set to an output.
+    The RB4 must be set to an output.
 
   @Returns
     None.
@@ -802,21 +948,21 @@
 
   @Example
     <code>
-    // Set RB5 high (1)
-    LED_SetHigh();
+    // Set RB4 high (1)
+    LED_Transmit_SetHigh();
     </code>
 
 */
-#define LED_SetHigh()          (_LATB5 = 1)
+#define LED_Transmit_SetHigh()          (_LATB4 = 1)
 /**
   @Summary
-    Sets the GPIO pin, RB5, low using LATB5.
+    Sets the GPIO pin, RB4, low using LATB4.
 
   @Description
-    Sets the GPIO pin, RB5, low using LATB5.
+    Sets the GPIO pin, RB4, low using LATB4.
 
   @Preconditions
-    The RB5 must be set to an output.
+    The RB4 must be set to an output.
 
   @Returns
     None.
@@ -826,21 +972,21 @@
 
   @Example
     <code>
-    // Set RB5 low (0)
-    LED_SetLow();
+    // Set RB4 low (0)
+    LED_Transmit_SetLow();
     </code>
 
 */
-#define LED_SetLow()           (_LATB5 = 0)
+#define LED_Transmit_SetLow()           (_LATB4 = 0)
 /**
   @Summary
-    Toggles the GPIO pin, RB5, using LATB5.
+    Toggles the GPIO pin, RB4, using LATB4.
 
   @Description
-    Toggles the GPIO pin, RB5, using LATB5.
+    Toggles the GPIO pin, RB4, using LATB4.
 
   @Preconditions
-    The RB5 must be set to an output.
+    The RB4 must be set to an output.
 
   @Returns
     None.
@@ -850,18 +996,18 @@
 
   @Example
     <code>
-    // Toggle RB5
-    LED_Toggle();
+    // Toggle RB4
+    LED_Transmit_Toggle();
     </code>
 
 */
-#define LED_Toggle()           (_LATB5 ^= 1)
+#define LED_Transmit_Toggle()           (_LATB4 ^= 1)
 /**
   @Summary
-    Reads the value of the GPIO pin, RB5.
+    Reads the value of the GPIO pin, RB4.
 
   @Description
-    Reads the value of the GPIO pin, RB5.
+    Reads the value of the GPIO pin, RB4.
 
   @Preconditions
     None.
@@ -876,18 +1022,18 @@
     <code>
     uint16_t portValue;
 
-    // Read RB5
-    postValue = LED_GetValue();
+    // Read RB4
+    postValue = LED_Transmit_GetValue();
     </code>
 
 */
-#define LED_GetValue()         _RB5
+#define LED_Transmit_GetValue()         _RB4
 /**
   @Summary
-    Configures the GPIO pin, RB5, as an input.
+    Configures the GPIO pin, RB4, as an input.
 
   @Description
-    Configures the GPIO pin, RB5, as an input.
+    Configures the GPIO pin, RB4, as an input.
 
   @Preconditions
     None.
@@ -900,18 +1046,18 @@
 
   @Example
     <code>
-    // Sets the RB5 as an input
-    LED_SetDigitalInput();
+    // Sets the RB4 as an input
+    LED_Transmit_SetDigitalInput();
     </code>
 
 */
-#define LED_SetDigitalInput()  (_TRISB5 = 1)
+#define LED_Transmit_SetDigitalInput()  (_TRISB4 = 1)
 /**
   @Summary
-    Configures the GPIO pin, RB5, as an output.
+    Configures the GPIO pin, RB4, as an output.
 
   @Description
-    Configures the GPIO pin, RB5, as an output.
+    Configures the GPIO pin, RB4, as an output.
 
   @Preconditions
     None.
@@ -924,12 +1070,304 @@
 
   @Example
     <code>
-    // Sets the RB5 as an output
-    LED_SetDigitalOutput();
+    // Sets the RB4 as an output
+    LED_Transmit_SetDigitalOutput();
     </code>
 
 */
-#define LED_SetDigitalOutput() (_TRISB5 = 0)
+#define LED_Transmit_SetDigitalOutput() (_TRISB4 = 0)
+/**
+  @Summary
+    Sets the GPIO pin, RB8, high using LATB8.
+
+  @Description
+    Sets the GPIO pin, RB8, high using LATB8.
+
+  @Preconditions
+    The RB8 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RB8 high (1)
+    SCL_SetHigh();
+    </code>
+
+*/
+#define SCL_SetHigh()          (_LATB8 = 1)
+/**
+  @Summary
+    Sets the GPIO pin, RB8, low using LATB8.
+
+  @Description
+    Sets the GPIO pin, RB8, low using LATB8.
+
+  @Preconditions
+    The RB8 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RB8 low (0)
+    SCL_SetLow();
+    </code>
+
+*/
+#define SCL_SetLow()           (_LATB8 = 0)
+/**
+  @Summary
+    Toggles the GPIO pin, RB8, using LATB8.
+
+  @Description
+    Toggles the GPIO pin, RB8, using LATB8.
+
+  @Preconditions
+    The RB8 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Toggle RB8
+    SCL_Toggle();
+    </code>
+
+*/
+#define SCL_Toggle()           (_LATB8 ^= 1)
+/**
+  @Summary
+    Reads the value of the GPIO pin, RB8.
+
+  @Description
+    Reads the value of the GPIO pin, RB8.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    uint16_t portValue;
+
+    // Read RB8
+    postValue = SCL_GetValue();
+    </code>
+
+*/
+#define SCL_GetValue()         _RB8
+/**
+  @Summary
+    Configures the GPIO pin, RB8, as an input.
+
+  @Description
+    Configures the GPIO pin, RB8, as an input.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RB8 as an input
+    SCL_SetDigitalInput();
+    </code>
+
+*/
+#define SCL_SetDigitalInput()  (_TRISB8 = 1)
+/**
+  @Summary
+    Configures the GPIO pin, RB8, as an output.
+
+  @Description
+    Configures the GPIO pin, RB8, as an output.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RB8 as an output
+    SCL_SetDigitalOutput();
+    </code>
+
+*/
+#define SCL_SetDigitalOutput() (_TRISB8 = 0)
+/**
+  @Summary
+    Sets the GPIO pin, RB9, high using LATB9.
+
+  @Description
+    Sets the GPIO pin, RB9, high using LATB9.
+
+  @Preconditions
+    The RB9 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RB9 high (1)
+    SDA_SetHigh();
+    </code>
+
+*/
+#define SDA_SetHigh()          (_LATB9 = 1)
+/**
+  @Summary
+    Sets the GPIO pin, RB9, low using LATB9.
+
+  @Description
+    Sets the GPIO pin, RB9, low using LATB9.
+
+  @Preconditions
+    The RB9 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RB9 low (0)
+    SDA_SetLow();
+    </code>
+
+*/
+#define SDA_SetLow()           (_LATB9 = 0)
+/**
+  @Summary
+    Toggles the GPIO pin, RB9, using LATB9.
+
+  @Description
+    Toggles the GPIO pin, RB9, using LATB9.
+
+  @Preconditions
+    The RB9 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Toggle RB9
+    SDA_Toggle();
+    </code>
+
+*/
+#define SDA_Toggle()           (_LATB9 ^= 1)
+/**
+  @Summary
+    Reads the value of the GPIO pin, RB9.
+
+  @Description
+    Reads the value of the GPIO pin, RB9.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    uint16_t portValue;
+
+    // Read RB9
+    postValue = SDA_GetValue();
+    </code>
+
+*/
+#define SDA_GetValue()         _RB9
+/**
+  @Summary
+    Configures the GPIO pin, RB9, as an input.
+
+  @Description
+    Configures the GPIO pin, RB9, as an input.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RB9 as an input
+    SDA_SetDigitalInput();
+    </code>
+
+*/
+#define SDA_SetDigitalInput()  (_TRISB9 = 1)
+/**
+  @Summary
+    Configures the GPIO pin, RB9, as an output.
+
+  @Description
+    Configures the GPIO pin, RB9, as an output.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RB9 as an output
+    SDA_SetDigitalOutput();
+    </code>
+
+*/
+#define SDA_SetDigitalOutput() (_TRISB9 = 0)
 
 /**
     Section: Function Prototypes
