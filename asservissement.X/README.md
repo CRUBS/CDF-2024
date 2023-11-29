@@ -14,7 +14,8 @@
     * [Génération d'une PWM](#PWM) 
     * [Lecture de l'encodeur](#Encodeur)
     * [Utilisation des timers](#Timers)
-    * [Utilisation du bus CAN](#CAN)
+    * [Utilisation du bus I2C](#I2C)
+    * [Utilisation de la liaison série](#Serie)
 * [Branchements du PIC](#Branchements)
 
 <span id="Introduction"><span>
@@ -37,18 +38,19 @@ L'asservissement est réalisé avec un moteur DC allant à 156 tours/min en sort
 
 L'objectif de cet asservissement est d'avoir un système stable avec un dépassement nul ou quasi-nul, aucun dépassement statique et un temps de réponse le plus faible possible mais inférieur à 200 ms.
 
-Afin de répondre à ces exigences nous avons mis en place un PID (Proportional Integral Derivator) doté de 3 facteur kp, ki et kd. Leur impact sur l'asserviseement est décrit ci-dessous pour plus d'information veuillez visiter [ce lien](http://www.ferdinandpiette.com/blog/2011/08/implementer-un-pid-sans-faire-de-calculs/)
+Afin de répondre à ces exigences nous avons mis en place un PID (Proportional Integral Derivator) doté de 3 facteur kp, ki et kd. Leur impact sur l'asservissement est décrit ci-dessous pour plus d'information veuillez visiter [ce lien](http://www.ferdinandpiette.com/blog/2011/08/implementer-un-pid-sans-faire-de-calculs/).
 
     L'erreur statique, c'est l'erreur finale une fois que le système est stabilité. Cette erreur doit être nulle. Pour diminuer l'erreur statique, il faut augmenter Kp et Ki.
     Le dépassement, c'est le rapport entre le premier pic et la consigne. Ce dépassement diminue si Kp ou Ki diminuent ou si Kd augmente.
     Le temps de montée correspond au temps qu'il faut pour arriver ou dépasser à la consigne. Le temps de montée diminue si Kp ou Ki augmentent ou si Kd diminue.
     Le temps de stabilisation, c'est le temps qu'il faut pour que le signal commette une erreur inférieure à 5% de la consigne. Ce temps de stabilisation diminue quand Kp et Ki augmentent.
 
-Afin de prédimmensionner ces valeurs nous avons simuler le système sur Scilab ce qui nous a donné kp=100, ki=2 et kd=2.
+Afin de pré-dimensionner ces valeurs nous avons simulé le système sur Scilab ce qui nous a donné kp=100, ki=2 et kd=2.
 
 Afin de pouvoir faire cela nous avons dû identifier le comportment du moteur pour cela nous avons mis en entrée une tension de 12V et print la vitesse renvoyé par l'encodeur toutes les 20 ms. À partir de là, nous avons déterminé le gain K et le temps de réponse Tau du moteur. Nous avons supposé que le moteur se comportait comme un premier ordre car avec notre résolution de valeur la différence n'est pas détectable. 
 
-Ensuite nous avons appliqué ces variables au moteur et les avons ajuster à tatons afin d'obtenir le comportement souhaité ce qui nous a donné kp=10, ki=20 et kd=0.3. En conclusion la simulation par Scilab n'est pas nécessaire si la stabilité du système lors des essais n'est pas obligatoire.
+Ensuite nous avons appliqué ces variables au moteur et les avons ajustées à tatons afin d'obtenir le comportement souhaité ce qui nous a donné kp=10, ki=20 et kd=0.3. En conclusion, la simulation par Scilab n'est pas nécessaire si la stabilité du système lors des essais n'est pas obligatoire.
+
 <span id="Programmation"><span>
 ## Programmation du PIC
 
@@ -242,7 +244,7 @@ volatile int previous_error = 0.0, integral = 0.0;
 volatile int rotating_speed_target = 0; // rad/s
 
 /*
- * Callback function called by the timer1 interrupts each 10 ms 
+ * Callback function called by the timer1 interrupts each 12 ms 
  * for calculating the rotating speed of the motor
  */
 void speed_rotation_measure()
@@ -252,7 +254,7 @@ void speed_rotation_measure()
     int current_position = (int) POS1CNTL; // Get the pulse count
     
     // Calculate the rotating speed in rad/s ; 
-    // Around 670 rad/s at max speed
+    // Around 700 rad/s at max speed
     int rotating_speed = (current_position - old_position) * rotating_speed_coef;
     
     old_position = current_position;
@@ -322,61 +324,83 @@ TMR1_Start();
 
 En rentrant une valeur négative en paramètre de la fonction ```set_rotating_speed```, le moteur sera asservi pour tourner dans l'autre sens.
 
-Nous allons configurer un second timer afin de faire un retour quant à la vitesse du moteur durant les 100 dernières millisecondes. La configuration est sensiblement la même que pour le timer1, mais il faut changer le *Prescaler* pour *1:8* afin de pouvoir configurer une période de 100 ms.
+<span id="I2C"><span>
+### Utilisation du bus I2C
 
-Nous nous rendons maintenant dans le *Interrupt Module* et nous définissons une priorité de 6 pour le timer1 et une priorité de 5 pour le timer2. Nous mettrons la priorité maximale pour la réception de message par bus CAN par la suite.
+Afin de communiquer avec la Raspberry Pi, nous utilisons le **bus I2C** en tant qu'esclave. Il est possible d'utiliser MCC pour la configuration, elle est assez facile (penser à cocher la case *clock stretching*). Cependant, nous allons refaire l'API de l'I2C pour qu'elle corresponde plus à l'utilisation. L'API est fortement inspirée de celle proposée par MCC mais avec des modifications directement dedans. Les pins pour l'I2C sont limités, nous allons utiliser le RB9 pour SDA et le RB8 pour SCL. Ces pins doivent être configurés en input.
 
-Une fois le code généré, nous ajoutons le code suivant au fichier main (ne pas oublier de configurer la fonction de callback et de démarrer le timer dans la fonction main) :
+Dans le fichier main.c, nous définissons 2 variables globales. La première qui contient l'adresse I2C que nous définissons pour le PIC (il faut 1 adresse différente par PIC sur le bus) et la deuxième contient un coefficient qui sera explicité un peu plus loin.
 
 ```c
-int speed_count = 0; // Sum of the speed
-uint8_t speed_measure_count = 0; // Number of times speed_rotation_measure is called
+const uint8_t i2c_address = 0x53;
+const uint8_t motor_speed_multiplier = 10;
+```
 
+Puis dans la fonction main, nous paramétrons l'I2C :
+
+```c
+I2C1_Initialize(i2c_address, motor_speed_multiplier);
+I2C1_ReadPointerSet(&speed_count, &speed_measure_count);
+I2C1_set_receive_handler(&set_rotating_speed_target);
+```
+
+Avec le bus I2C, le PIC reçoit la vitesse de rotation du moteur voulue et envoie la vitesse de rotation réelle. Pour cela, nous communiquons les valeurs sur 1 octet, or la valeur de vitesse peut aller de -700 à 700 rad/s. Nous avons donc décidé que le premier bit correspond au bit de signe (1 = <0, 0 = >= 0) et les 7 bits suivants sont les bits pour la valeur en absolue mais divisée par un facteur pour être inférieur à 128. Ce facteur est définie en fonction de la résolution maximale que peuvent nous donner les encodeurs et qui reste inférieur à 128. Cette valeur est trouvée en divisant l'angle entre 2 pulse de l'encodeur (en rad) par le temps entre les appels de la fonction de mesure de vitesse.
+
+
+<span id="Serie"><span>
+### Utilisation de la liaison série
+
+La liaison série n'est pas utilisée dans le code final mais a servi pour le développement. Le paramétrage se fait via MCC  en sélectionnant le périphérique UART, et les paramètres de base permette de communiquer. En cochant la bonne case, il est possible d'envoyer un message depuis le PIC en utilisant la fonction *printf* si la case a été cochée dans MCC. Pour la réception de message, on active les interruptions.
+
+Pour la réception de données, l'interruption est levée pour chaque caractère reçu. Je n'ai pas réussi à faire correctement fonctionner la réception avec l'API proposée par MCC donc la fonction suivante qui doit être appelée à chaque fois qu'un caractère est reçu. On sauvegarde chaque caractère reçu jusqu'au caractère '\n' ou que le message dépasse la capacité de la variable où on convertit la string reçue en nombre.
+
+```c
 /*
- * Callback function called by the timer2 interrupts each 100 ms
- * for sending the average rotating speed of the motor
- * Toggle the state of the led on pin RB5 at each call
+ * Callback function called when a serial message is received
  */
-void send_average_speed()
-{
-    
-    //printf("%d\n", speed_count / speed_measure_count);
-    
-    CAN_MSG_OBJ msg;
-    if(CAN_CONFIGURATION_MODE == CAN1_OperationModeGet())
+void serial_receive()
+{    
+    // Clear the error if there is one
+    if (U1STAbits.OERR)
     {
-        if(CAN_OP_MODE_REQUEST_SUCCESS == CAN1_OperationModeSet(CAN_NORMAL_2_0_MODE))
-        {
-            msg.msgId = 0x1FFFF;
-            msg.field.frameType = CAN_FRAME_DATA;
-            msg.field.idType = CAN_FRAME_EXT;
-            msg.field.dlc = CAN_DLC_8;
-            msg.data = 1;
-
-            CAN1_Transmit(CAN_PRIORITY_HIGH, &msg);
-        }
+        U1STAbits.OERR = 0;
+        return;
     }
     
-    toggle_led_state();
+    char received_char = U1RXREG; // Read the received char
     
-    speed_count = 0;
-    speed_measure_count = 0;
+    if (received_char == '\n' || char_count >= MESSAGE_LEN) // If it is the end of the message
+    {
+        int value = atoi(message); // Get the integer value
+        if(is_negative) value = -value; // Set the value negative if it necessary
+        
+        set_rotating_speed_target(value); 
+        
+        // Clear the message to be ready for next message
+        for(int i = 0 ; i < MESSAGE_LEN ; i++)
+            message[i] = '$';
+        char_count = 0;
+        is_negative = false;
+    }
+    else if(received_char == '-') // If the value to be received is negative
+        is_negative = true;
+    else 
+    {
+        message[char_count] = received_char; // Store the received character
+        char_count ++;
+    }
 }
-``` 
+```
 
-<span id="CAN"><span>
-### Utilisation du bus CAN
-
-TODO
+La liaison série est désactivée, mais le pin RB6 est prévu RX et le pin RB7 est prévu TX sur la carte moteur.
 
 <span id="Branchements"><span>
 ## Branchements du PIC
 
-La configuration minimale des branchements du PIC est montrée dans l'image ci-dessous avec les branchements avec le Pickit 3 à gauche. Ce dernier permet de programmer le PIC.
+La configuration minimale des branchements du PIC est montrée dans l'image ci-dessous avec les branchements avec le Pickit 3 à gauche. Ce dernier permet de programmer le PIC. 
 
 <p align="center">
 <img src="https://github.com/CRUBS/CDF-2024/assets/77966063/04a4bd4b-d3e9-432b-a8ee-341795e5c27e">
 </p>
 
-TODO
 

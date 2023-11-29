@@ -61,13 +61,13 @@
 #pragma config FWDTEN = OFF    //Watchdog Timer Enable bit->Watchdog timer enabled/disabled by user software
 
 // FOSC
-#pragma config POSCMD = XT    //Primary Oscillator Mode Select bits->XT Crystal Oscillator Mode
+#pragma config POSCMD = NONE    //Primary Oscillator Mode Select bits->Primary Oscillator disabled
 #pragma config OSCIOFNC = ON    //OSC2 Pin Function bit->OSC2 is general purpose digital I/O pin
 #pragma config IOL1WAY = ON    //Peripheral pin select configuration->Allow only one reconfiguration
 #pragma config FCKSM = CSECME    //Clock Switching Mode bits->Both Clock switching and Fail-safe Clock Monitor are enabled
 
 // FOSCSEL
-#pragma config FNOSC = FRC    //Oscillator Source Selection->FRC
+#pragma config FNOSC = FRC    //Oscillator Source Selection->Internal Fast RC (FRC)
 #pragma config PWMLOCK = OFF    //PWM Lock Enable bit->PWM registers may be written without key sequence
 #pragma config IESO = OFF    //Two-speed Oscillator Start-up Enable bit->Start up with user-selected oscillator source
 
@@ -79,19 +79,15 @@
 #include "clock.h"
 #include "system.h"
 #include "system_types.h"
-#include "tmr2.h"
-#include "tmr1.h"
-#include "uart1.h"
 #include "interrupt_manager.h"
 #include "traps.h"
+#include "tmr1.h"
 
 void SYSTEM_Initialize(void)
 {
     PIN_MANAGER_Initialize();
     CLOCK_Initialize();
     INTERRUPT_Initialize();
-    UART1_Initialize();
-    TMR2_Initialize();
     TMR1_Initialize();
     INTERRUPT_GlobalEnable();
     SYSTEM_CORCONModeOperatingSet(CORCON_MODE_PORVALUES);

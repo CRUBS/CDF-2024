@@ -59,12 +59,8 @@
 */
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/tmr1.h"
-#include "mcc_generated_files/tmr2.h"
-#include "mcc_generated_files/uart1.h"
 #include "i2c.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 
 /*      Global variables        */
 
@@ -86,12 +82,8 @@ volatile int previous_error = 0.0, integral = 0.0;
 volatile int rotating_speed_target = 0; // rad/s
 
 // Message variables
-#define MESSAGE_LEN 4
-char message[MESSAGE_LEN] = "$$$$";
-uint8_t char_count = 0;
-bool is_negative = false;
 const uint8_t i2c_address = 0x53;
-const uint8_t motor_speed_multiplier = 10;
+const uint8_t motor_speed_multiplier = 10; // ANGLE_CODER / TIME_INTERVAL arrondi
 
 /*      Initialisation functions       */
 
@@ -186,14 +178,6 @@ void set_rotation_clockwise(bool clockwise)
 }
 
 /*
- * Toggle the state of the led on pin RB5
- */
-void toggle_led_state()
-{
-    _LATB5 = !_LATB5;
-}
-
-/*
  * Set the rotating speed target of the motor.
  * @param target: wanted rotating speed of the motor, 
  * if <0, the motor rotate in the other direction
@@ -251,7 +235,7 @@ void speed_rotation_measure()
     int current_position = (int) POS1CNTL; // Get the pulse count
     
     // Calculate the rotating speed in rad/s ; 
-    // Around 670 rad/s at max speed
+    // Around 700 rad/s at max speed
     int rotating_speed = (current_position - old_position) * rotating_speed_coef;
     
     old_position = current_position;
@@ -261,59 +245,6 @@ void speed_rotation_measure()
     
     control_motor_speed(rotating_speed, TIME_INTERVAL); // Enslave
 }
-
-/*
- * Callback function called by the timer2 interrupts each 100 ms
- * for sending the average rotating speed of the motor
- * Toggle the state of the led on pin RB5 at each call
- */
-void send_average_speed()
-{
-    /*printf("%d\n", speed_count / speed_measure_count);
-    
-    toggle_led_state();
-    
-    speed_count = 0;
-    speed_measure_count = 0;*/
-    printf("%d\n", rotating_speed_target);
-}
-
-/*
- * Callback function called when a serial message is received
- */
-void serial_receive()
-{    
-    // Clear the error if there is one
-    if (U1STAbits.OERR)
-    {
-        U1STAbits.OERR = 0;
-        return;
-    }
-    
-    char received_char = U1RXREG; // Read the received char
-    
-    if (received_char == '\n' || char_count >= MESSAGE_LEN) // If it is the end of the message
-    {
-        int value = atoi(message); // Get the integer value
-        if(is_negative) value = -value; // Set the value negative if it necessary
-        
-        set_rotating_speed_target(value); 
-        
-        // Clear the message to be ready for next message
-        for(int i = 0 ; i < MESSAGE_LEN ; i++)
-            message[i] = '$';
-        char_count = 0;
-        is_negative = false;
-    }
-    else if(received_char == '-') // If the value to be received is negative
-        is_negative = true;
-    else 
-    {
-        message[char_count] = received_char; // Store the received character
-        char_count ++;
-    }
-}
-
 
 /*
                          Main application
@@ -327,21 +258,14 @@ int main(void)
     init_PWM();
     
     // Set complementary parameters
-    TMR1_SetInterruptHandler(&speed_rotation_measure);  
-    TMR2_SetInterruptHandler(&send_average_speed);
-    UART1_SetRxInterruptHandler(&serial_receive);
+    TMR1_SetInterruptHandler(&speed_rotation_measure);
 
     // I2C parameters
     I2C1_ReadPointerSet(&speed_count, &speed_measure_count);
-    uint8_t a = 0; // A variable to stock the received value
-    I2C1_WritePointerSet(&a);
     I2C1_set_receive_handler(&set_rotating_speed_target);
-    
-    set_rotating_speed_target(34);
     
     // Start modules
     TMR1_Start();
-    //TMR2_Start();
     
     while (1)
     {

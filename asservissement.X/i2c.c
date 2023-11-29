@@ -100,7 +100,7 @@ void (*I2C_ReceiveHandler)(int) = NULL;
 */
 
 static I2C_SLAVE_STATES   i2c1_slave_state;
-static uint8_t            *p_i2c1_write_pointer;
+static uint8_t            i2c1_write;
 static uint8_t            *p_read_speed_nb_measure;
 static int                *p_read_speed_sum;
 uint8_t                   i2c_motor_speed_multiplier;
@@ -131,7 +131,7 @@ void I2C1_Initialize(const uint16_t address, const uint8_t motor_speed_multiplie
     i2c1_slave_state = S_SLAVE_IDLE;
     
     I2C1_ReadPointerSet(NULL, NULL);
-    I2C1_WritePointerSet(NULL);
+    i2c1_write = 0;
     
     i2c_motor_speed_multiplier = motor_speed_multiplier_;
     
@@ -215,8 +215,8 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _SI2C1Interrupt ( void )
                     {
                         I2C1_ReceiveProcess();
                         
-                        int value = *p_i2c1_write_pointer & 0b01111111; // Get the 7-bits value
-                        if(*p_i2c1_write_pointer & 0b10000000) // Get the bit sign
+                        int value = i2c1_write & 0b01111111; // Get the 7-bits value
+                        if(i2c1_write & 0b10000000) // Get the bit sign
                             value = -value;
                         
                         I2C_ReceiveHandler(value * i2c_motor_speed_multiplier);
@@ -276,11 +276,6 @@ void I2C1_ReadPointerSet(int *sum_speed, uint8_t *measure_count)
     p_read_speed_sum = sum_speed;
 }
 
-void I2C1_WritePointerSet(uint8_t *p)
-{
-    p_i2c1_write_pointer = p;
-}
-
 void I2C1_SlaveAddressMaskSet(uint16_t mask)
 {
     I2C1_MASK_REG = mask;
@@ -316,7 +311,7 @@ static inline void __attribute__ ((always_inline)) I2C1_ReceiveProcess(void)
 {   
     // store the received data 
 
-    *p_i2c1_write_pointer = I2C1_RECEIVE_REG;
+    i2c1_write = I2C1_RECEIVE_REG;
     toggle_led_receive();
 }
 

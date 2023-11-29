@@ -176,33 +176,6 @@ void I2C1_SlaveAddressSet(uint16_t address);
 */
 void I2C1_ReadPointerSet(int *sum_speed, uint8_t *measure_count);
 
-/**
-    @Summary
-        This function sets the write pointer for the slave driver.
-
-    @Description
-        This function sets the write pointer that the driver will
-        need to save data that will be received from the master
-        whenever the master requests a write.
-
-    @Preconditions
-        None
-
-    @Param
-        *p - The pointer to the read buffer, that will be used to transmit
-             data to the requesting i2c master.
-
-    @Returns
-        None
-
-    @Example
-        <code>
-            Refer to I2C1_Initialize() for an example	
-        </code>
-
-*/
-void I2C1_WritePointerSet(uint8_t *p);
-
 /*
  * Set the handler when data is received
  * @param interruptHandler: the callback function
