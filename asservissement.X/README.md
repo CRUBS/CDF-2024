@@ -394,6 +394,8 @@ void serial_receive()
 
 La liaison série est désactivée, mais le pin RB6 est prévu RX et le pin RB7 est prévu TX sur la carte moteur.
 
+NOTE : La carte moteur a aussi été prévue pour pouvoir ajouter un quartz en horloge du PIC et d'utiliser le bus CAN avec CRX sur le pin RB9 et CTX sur le pin RB8.
+
 <span id="Branchements"><span>
 ## Branchements du PIC
 
