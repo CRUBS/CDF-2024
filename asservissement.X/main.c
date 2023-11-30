@@ -93,13 +93,13 @@ const uint8_t motor_speed_multiplier = 10; // ANGLE_CODER / TIME_INTERVAL arrond
 void init_PWM()
 {    
     /* Set PWM Period on Primary Time Base */
-    PTPER = 3999; // 500 us
+    PTPER = 3684; // 500 us
 
     /* Set Phase Shift */
     PHASE1 = 0;
 
     /* Set Duty Cycles */
-    MDC = 2000; // 50 %
+    MDC = 1842; // 50 %
 
     /* Set Dead Time Values */
     DTR1 = 0;
@@ -242,6 +242,12 @@ void speed_rotation_measure()
     
     speed_count += rotating_speed;
     speed_measure_count ++;
+    
+    if(speed_measure_count >= 20) // Check to avoid overflow
+    {
+        speed_count /= speed_measure_count;
+        speed_measure_count = 1;
+    }
     
     control_motor_speed(rotating_speed, TIME_INTERVAL); // Enslave
 }
