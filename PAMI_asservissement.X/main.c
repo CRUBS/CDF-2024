@@ -123,7 +123,7 @@ int main(void)
     
     while (1)
     {
-        // Add your application code
+        // Nothing to do, everything is handled by interrupts 
     }
     return 1; 
 }
