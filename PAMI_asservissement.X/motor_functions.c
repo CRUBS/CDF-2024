@@ -143,7 +143,7 @@ void speed_rotation_measure_r()
  */
 void speed_rotation_measure_l()
 {    
-    int current_position = (int) POS1CNTL; // Get the pulse count
+    int current_position = (int) POS2CNTL; // Get the pulse count
     
     // Calculate the rotating speed in rad/s ; 
     // Around 700 rad/s at max speed
