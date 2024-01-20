@@ -83,7 +83,7 @@ volatile int rotating_speed_target = 0; // rad/s
 
 // Message variables
 const uint8_t i2c_address = 0x53;
-const uint8_t motor_speed_multiplier = 10; // ANGLE_CODER / TIME_INTERVAL arrondi
+const uint8_t motor_speed_multiplier = 10; // ANGLE_CODER / TIME_INTERVAL rounded
 
 /*      Initialisation functions       */
 
@@ -184,14 +184,17 @@ void set_rotation_clockwise(bool clockwise)
  */
 void set_rotating_speed_target(int target)
 {
-    rotating_speed_target = target;
-    
-    // Set rotating direction
-    set_rotation_clockwise(target > 0);
-    
-    // Reset PID variables
-    integral = 0;
-    previous_error = 0;
+    if (target != rotating_speed_target)
+    {
+        rotating_speed_target = target;
+
+        // Set rotating direction
+        set_rotation_clockwise(target > 0);
+
+        // Reset PID variables
+        integral = 0;
+        previous_error = 0;
+    }
 }
 
 /*

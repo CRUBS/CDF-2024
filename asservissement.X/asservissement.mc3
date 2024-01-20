@@ -1788,30 +1788,6 @@
          <value>input</value>
       </entry>
       <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="SCL%aux1"/>
-         <value>ON</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="SCL%aux3"/>
-         <value>ON</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="SCL%aux5"/>
-         <value>ON</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="SDA%aux0"/>
-         <value>ON</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="SDA%aux2"/>
-         <value>ON</value>
-      </entry>
-      <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="SDA%aux4"/>
-         <value>ON</value>
-      </entry>
-      <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="anselUserSetRA0"/>
          <value>disabled</value>
       </entry>
@@ -4778,24 +4754,24 @@
          <hash>059b586c60631f1dc97726bead851933f61df389eb968c77feb07a27f6bfb9e8</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files/reset.c</file>
-         <hash>291349d122538cf6d60171eb83b93e3b0b3fb6e49a42f90c4fd2ba589148d674</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files/tmr1.c</file>
          <hash>ba888b99fe86f188b362475cbe82c95601b869e43c0fa2a77fbb83ccc1d6506e</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files/system.c</file>
-         <hash>3883023c62ffc222727f99936381754c0e414547a14833429d3c1cd95d1aacf8</hash>
+         <file>mcc_generated_files/reset.c</file>
+         <hash>291349d122538cf6d60171eb83b93e3b0b3fb6e49a42f90c4fd2ba589148d674</hash>
       </entry>
       <entry>
-         <file>main.c</file>
-         <hash>ff731902e381cb09cc86b91be42eaf007cb40103cffb93a573cd2f082b2c4bad</hash>
+         <file>mcc_generated_files/system.c</file>
+         <hash>526aabaf965ed2d23a7d87ddd75c062c7297832606b0ca1962d76a2fe48e8f79</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/reset.h</file>
          <hash>5a04cf1b4dcbf53932376e9507d4ea40e8f5289c8e4de1de79957f7560e84ee1</hash>
+      </entry>
+      <entry>
+         <file>main.c</file>
+         <hash>ff731902e381cb09cc86b91be42eaf007cb40103cffb93a573cd2f082b2c4bad</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/tmr1.h</file>
@@ -4827,7 +4803,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files/mcc.h</file>
-         <hash>981950d341e2a3092e813954c25de35d5b45f6a91392e160080ddfc37ef672f3</hash>
+         <hash>bd261097eee8afa01d229a2ffcec291158b8e2421f6966d85113f3834efcabb2</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/system.h</file>
