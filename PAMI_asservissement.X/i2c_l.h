@@ -78,7 +78,7 @@ extern "C" {
   
         </code>
 */
-void I2C_L_Initialize(const uint16_t address, const uint8_t motor_speed_multiplier_);
+void I2C_L_Initialize(const uint16_t address);
 
 
 /**

@@ -103,7 +103,6 @@ static I2C_L_SLAVE_STATES   i2c_l_slave_state;
 static uint8_t            i2c_l_write;
 static uint8_t            *p_read_speed_nb_measure_l;
 static int                *p_read_speed_sum_l;
-uint8_t                   i2c_l_motor_speed_multiplier;
 
 /**
   Prototype:        void I2C_L_Initialize(void)
@@ -114,7 +113,7 @@ uint8_t                   i2c_l_motor_speed_multiplier;
   Comment:          
   Usage:            I2C_L_Initialize();
 */
-void I2C_L_Initialize(const uint16_t address, const uint8_t motor_speed_multiplier_)
+void I2C_L_Initialize(const uint16_t address)
 {
 
     // initialize the hardware
@@ -132,8 +131,6 @@ void I2C_L_Initialize(const uint16_t address, const uint8_t motor_speed_multipli
     
     I2C_L_ReadPointerSet(NULL, NULL);
     i2c_l_write = 0;
-    
-    i2c_l_motor_speed_multiplier = motor_speed_multiplier_;
     
     // INTERRUPTS
     //    MICI: I2C3 Master Events
@@ -219,7 +216,7 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _SI2C3Interrupt ( void )
                         if(i2c_l_write & 0b10000000) // Get the bit sign
                             value = -value;
                         
-                        I2C_L_ReceiveHandler(value * i2c_l_motor_speed_multiplier);
+                        I2C_L_ReceiveHandler(value);
                     }
                     else
                     {
@@ -292,7 +289,7 @@ static inline void __attribute__ ((always_inline)) I2C_L_TransmitProcess(void)
     // get the data to be transmitted
     
     // Calculate the average speed reduced
-    int val = *p_read_speed_sum_l / *p_read_speed_nb_measure_l / i2c_l_motor_speed_multiplier;
+    int val = *p_read_speed_sum_l / *p_read_speed_nb_measure_l;
     
     // Set the message to be sent
     uint8_t message = val < 0 ? 0b10000000 + (uint8_t) -val : (uint8_t) val;

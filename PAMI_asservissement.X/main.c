@@ -51,7 +51,6 @@
 #include "motor_functions.h"
 #include "mcc_generated_files/tmr1.h"
 
-const uint8_t motor_speed_multiplier = 10; // ANGLE_CODER / TIME_INTERVAL arrondi
 const uint8_t i2c_right_address = 0x53, i2c_left_address = 0x54;
 
 /*
@@ -104,8 +103,8 @@ int main(void)
     // initialize the device
     init_QEI();
     SYSTEM_Initialize();
-    I2C_R_Initialize(i2c_right_address, motor_speed_multiplier);
-    I2C_L_Initialize(i2c_left_address, motor_speed_multiplier);
+    I2C_R_Initialize(i2c_right_address);
+    I2C_L_Initialize(i2c_left_address);
     init_PWM();
     
     TMR1_SetInterruptHandler(&speed_rotation_measure);
