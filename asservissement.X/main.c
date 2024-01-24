@@ -82,7 +82,7 @@ volatile int previous_error = 0.0, integral = 0.0;
 volatile int rotating_speed_target = 0; // rad/s
 
 // Message variables
-const uint8_t i2c_address = 0x53;
+const uint8_t i2c_address = 0x51;
 const uint8_t motor_speed_multiplier = 10; // ANGLE_CODER / TIME_INTERVAL rounded
 
 /*      Initialisation functions       */
@@ -99,7 +99,7 @@ void init_PWM()
     PHASE1 = 0;
 
     /* Set Duty Cycles */
-    MDC = 1842; // 50 %
+    MDC = 0; // 0 %
 
     /* Set Dead Time Values */
     DTR1 = 0;
