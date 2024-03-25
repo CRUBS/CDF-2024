@@ -21,6 +21,14 @@ def generate_launch_description():
         executable='interfaceI2C',
         output='screen',
         parameters=[]
+    )    
+    
+    # Lancement de l interface gpio
+    interfaceGPIO = Node(
+        package='robot_communication',
+        executable='interfaceGPIO',
+        output='screen',
+        parameters=[]
     )
     
     # Lancement des accessoires
@@ -39,6 +47,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         interfaceI2C,
+        interfaceGPIO,
         accessories,
         kalman
     ])
