@@ -350,11 +350,11 @@
       </geometry>
     </collision>
   </link>
-  <joint name="imu_joint"
+<joint name="imu_joint"
     type="fixed">
     <origin
-      xyz="-0.0032751 -0.06 0.12"
-      rpy="1.5708 0 0" />
+      xyz="-0.0032751 0.05685 0.029"
+      rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
