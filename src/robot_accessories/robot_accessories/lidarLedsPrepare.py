@@ -45,7 +45,7 @@ class lidarLedsPrepareNode(Node):
 
 			anglePos += angleIncrement # calcul of actual angle pos in the sector
 
-			if value < extremValue and not math.isnan(value): extremValue = value
+			if (0.30 < value < extremValue) and (not math.isnan(value)): extremValue = value
 
 			if anglePos >= sectorAngleSize * sectorIndex:
 				sectorIndex += 1
@@ -56,11 +56,10 @@ class lidarLedsPrepareNode(Node):
 				distancesList.append(int(extremValue))
 				extremValue = 999
 		
-		
 		distancesList.reverse()
 	
 		# publish average distances
-		msgDistance =Int16MultiArray()
+		msgDistance = Int16MultiArray()
 		msgDistance.data = distancesList[0:24]
 		self.publisherLidarDistances.publish(msgDistance)
 

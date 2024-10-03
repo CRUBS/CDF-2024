@@ -24,7 +24,8 @@ setup(
             'moteurI2C = robot_communication.moteurI2C:main',
             'interfaceI2C = robot_communication.interfaceI2C:main',
             'interfaceGPIO = robot_communication.interfaceGPIO:main',
-            'testI2C = robot_communication.testI2C:main'
+            'testI2C = robot_communication.testI2C:main',
+	    'interfacePAMI = robot_communication.interfacePAMI:main'
 
         ],
     },

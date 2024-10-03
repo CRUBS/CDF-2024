@@ -27,16 +27,16 @@ from sensor_msgs.msg import Imu
 from adafruit_servokit import ServoKit
 from rpi_lcd import LCD
 from adafruit_vl53l0x import VL53L0X
-from mpu6050 import mpu6050
+from icm20948 import ICM20948
 
 # Class for the I2C interface
 class i2cInterface(Node):
 	def __init__(self):
 		super().__init__('interfaceI2C')
-		
+
 		# Raspberry s PINS declaration
 		self.resetPicPin = 4 # Reset the motor microcontroller via GPIO4
-		
+
 		# I2C init
 		self.i2c = busio.I2C(board.SCL, board.SDA)
 		self.i2cBusy = False
@@ -45,18 +45,18 @@ class i2cInterface(Node):
 		self.picAddresses = [0x50,0x51,0x52] # I2C addresses for the motor controller
 		
 		try: self.servoController = ServoKit(channels = 16)
-		except: print("servo controller not found")
+		except: self.get_logger().info("servo controller not found")
 		
 		try: self.lcd = LCD(); time.sleep(0.5)
-		except: print("lcd screen not found")
+		except: self.get_logger().info("lcd screen not found")
 		
-		try: self.imu = mpu6050(0x68,1);
-		except: print("imu not found")
+		try: self.imu = ICM20948()
+		except: self.get_logger().info("imu not found")
 		
 		# I2C addresses
 		self.esp32Adress = 0x14
 		self.pcfAddresses = [0x20, 0x21]
-		self.vl53Adresses = [0x30, 0x31, 0x32, 0x33]
+		self.vl53Adresses = [0x30, 0x31]
 		self.vl53Group = []
 		
 		#team init
@@ -73,38 +73,31 @@ class i2cInterface(Node):
 			self.i2c.writeto(self.pcfAddresses[1], bytes([0x00]))
 			time.sleep(0.5)
 			#self.i2c.writeto(self.pcfAddresses[1], bytes([0x40]))
-		except: print("pcf 20 and/or 21 not found")
+		except: self.get_logger().info("pcf 20 and/or 21 not found")
 		
 		#vl53 init
+		"""
 		try:
 			self.i2c.writeto(self.pcfAddresses[0], bytes([0x01]))
-			time.sleep(0.1)
+			time.sleep(0.5)
 			tempVl53 = VL53L0X(self.i2c)
 			tempVl53.set_address(self.vl53Adresses[0])
 			self.vl53Group.append(tempVl53)
+			time.sleep(0.5)
+		except: self.get_logger().info("vl53 30 not found")
 		
+		try:
 			self.i2c.writeto(self.pcfAddresses[0], bytes([0x03]))
-			time.sleep(0.1)
+			time.sleep(0.5)
 			tempVl53 = VL53L0X(self.i2c)
 			tempVl53.set_address(self.vl53Adresses[1])
 			self.vl53Group.append(tempVl53)
-			
-			self.i2c.writeto(self.pcfAddresses[0], bytes([0x07]))
-			time.sleep(0.1)
-			tempVl53 = VL53L0X(self.i2c)
-			tempVl53.set_address(self.vl53Adresses[2])
-			self.vl53Group.append(tempVl53)
-			
-			self.i2c.writeto(self.pcfAddresses[0], bytes([0x0f]))
-			time.sleep(0.1)
-			tempVl53 = VL53L0X(self.i2c)
-			tempVl53.set_address(self.vl53Adresses[3])
-			self.vl53Group.append(tempVl53)
-		except: print("vl53 31, 32, 33, 34 not found")
-		
+			time.sleep(0.5)
+		except: self.get_logger().info("vl53 31 not found")
+		"""
 		# Servos init
 		self.nbServos = 16 # Limit of number of servos in action (max 16)
-		self.servosPos = [10,180,0,0,10,180,0,0,0,0,0,0,0,0,0,0]
+		self.servosPos = [80,180,0,0,80,180,0,0,0,0,0,0,0,0,0,0]
 		
 		# LCD init
 		self.screenString = ""
@@ -140,7 +133,7 @@ class i2cInterface(Node):
 		## ROS2 timers 
 		self.timerScreen = self.create_timer(0.5, self.timer_screen_callback)
 		self.timerServos = self.create_timer(0.2, self.timer_servos_callback)
-		self.timerImu = self.create_timer(0.02, self.timer_imu_callback)
+		self.timerImu = self.create_timer(0.1, self.timer_imu_callback)
 		self.timerVl53 = self.create_timer(0.25, self.timer_vl53_callback)
 		self.timerMotors = self.create_timer(0.1, self.timer_motors_callback)
 		self.timerEncoders = self.create_timer(0.1, self.timer_encoders_callback)
@@ -207,9 +200,9 @@ class i2cInterface(Node):
 		while self.i2cBusy: pass
 		self.i2cBusy = True
 		try:
-			self.i2c.writeto(self.picAddresses[0], bytes([self.speedMotor1]))
-			#time.sleep(0.01)
 			self.i2c.writeto(self.picAddresses[1], bytes([self.speedMotor2]))
+			#time.sleep(0.01)
+			self.i2c.writeto(self.picAddresses[0], bytes([self.speedMotor1]))
 			#time.sleep(0.01)
 			#self.i2c.writeto(self.picAddresses[2], bytes([self.speedMotor3]))
 		except:
@@ -297,16 +290,16 @@ class i2cInterface(Node):
 		while self.i2cBusy: pass
 		self.i2cBusy = True
 		try:
-			# (ax, ay, az, gx, gy, gz) = self.imu.read_accelerometer_gyro_data()
-			accel_data = self.imu.get_accel_data()
-			gyro_data = self.imu.get_gyro_data()
+			ax, ay, az, gx, gy, gz = self.imu.read_accelerometer_gyro_data()
+			#accel_data = self.imu.get_accel_data()
+			#gyro_data = self.imu.get_gyro_data()
 			self.i2cBusy = False
-			msg.linear_acceleration.x = accel_data['x'] #en g
-			msg.linear_acceleration.y = accel_data['y']
-			msg.linear_acceleration.z = accel_data['z']
-			msg.angular_velocity.x = gyro_data['x'] #en rad/s
-			msg.angular_velocity.y = gyro_data['y']
-			msg.angular_velocity.z = gyro_data['z']
+			msg.linear_acceleration.x = ax #en g
+			msg.linear_acceleration.y = ay
+			msg.linear_acceleration.z = az
+			msg.angular_velocity.x = gx #en rad/s
+			msg.angular_velocity.y = gy
+			msg.angular_velocity.z = gz
 			self.publisherImu.publish(msg)
 		except:
 			msgStatus.data = "error"
@@ -339,8 +332,8 @@ class i2cInterface(Node):
 		try:
 			vl53Ranges.append(self.vl53Group[0].range)
 			vl53Ranges.append(self.vl53Group[1].range)
-			vl53Ranges.append(self.vl53Group[2].range)
-			vl53Ranges.append(self.vl53Group[3].range)
+			#vl53Ranges.append(self.vl53Group[2].range)
+			#vl53Ranges.append(self.vl53Group[3].range)
 		except:
 			msgStatus.data = "error"
 		self.i2cBusy = False

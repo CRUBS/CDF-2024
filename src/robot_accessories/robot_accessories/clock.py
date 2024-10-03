@@ -13,7 +13,7 @@ import rclpy
 from rclpy.node import Node
 import time
 
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Bool
 
 class lcdPrepareNode(Node):
 	def __init__(self):
@@ -21,18 +21,26 @@ class lcdPrepareNode(Node):
 		
 		# ROS2 publishers
 		self.publisherTimer = self.create_publisher(Int16, '/timer', 10)
+
+		# ROS2 subscribers
+		self.subscriberStart = self.create_subscription(Bool, '/starterRemoved', self.start_callback, 10)
 		
 		# Timer init
 		self.timerTimer = self.create_timer(1, self.timer_timer_callback)
 		
 		# Timer value init
 		self.timerValue = 0
+		self.starterRemoved = False
 	
 	def timer_timer_callback(self):
-		self.timerValue = self.timerValue + 1
-		msg = Int16()
-		msg.data = self.timerValue
-		self.publisherTimer.publish(msg)
+		if self.starterRemoved == True:
+			self.timerValue = self.timerValue + 1
+			msg = Int16()
+			msg.data = self.timerValue
+			self.publisherTimer.publish(msg)
+
+	
+	def start_callback(self, msg): self.starterRemoved = msg.data
 
 
 def main(args=None):

@@ -23,7 +23,9 @@ class lcdPrepareNode(Node):
 		# ROS2 subscribers
 		self.subscriptionScore = self.create_subscription(Int8, '/score', self.callback_update_score, 10)
 		self.subscriptionTimer = self.create_subscription(Int16, '/timer', self.callback_update_timer, 10)
-		self.subscriptionTimer = self.create_subscription(Twist, '/cmd_vel', self.callback_update_cmd_vel, 10)
+		self.subscriptionCmdVel = self.create_subscription(Twist, '/cmd_vel', self.callback_update_cmd_vel, 10)
+		self.subscriptionTeam = self.create_subscription(String, '/team', self.callback_update_team, 10)
+		self.subscriptionPami = self.create_subscription(String, '/pami_status', self.callback_update_pami_status, 10)
 		
 		# ROS2 publishers
 		self.publisherStringLcd = self.create_publisher(String, '/screen', 10)
@@ -33,21 +35,28 @@ class lcdPrepareNode(Node):
 		
 		# Init
 		self.timerValue = 0
-		self.scoreValue = 0
+		self.scoreValue = 23
 		self.cmdvelValue = [0, 0, 0]
-		
+		self.team = ""
+		self.pamiStatus = ""
+
 	def timer_screen_callback(self):
 		msg = String()
-		line1 = f"{self.timerValue}   {self.scoreValue}"
+		line2 = ""
+		line1 = f"{self.team[0]} {self.timerValue}s  score: {self.scoreValue}"
 		line1 = " "*int((20-len(line1))/2) + line1
 		line1 = line1 + " "*int(20-len(line1))
-		line2 = f"{self.cmdvelValue[0]} {self.cmdvelValue[1]} {self.cmdvelValue[2]}"
-		line2 = " "*int((20-len(line2))/2) + line2
-		line2 = line2 + " "*int(20-len(line2))
-		msg.data = line1 + line2
+		line2tmp = f"x:{self.cmdvelValue[0]} rz:{self.cmdvelValue[2]}"
+		line2 = " "*int((20-len(line2tmp))/2) + line2tmp
+		line2 = line2 + " "*int(20-len(line2tmp))
+		line3 = f"{self.pamiStatus}\n"
+		msg.data = line1 + line2 + line3
 		self.publisherStringLcd.publish(msg)
-		
 	
+	def callback_update_pami_status(self,msg): self.pamiStatus = msg.data
+
+	def callback_update_team(self,msg): self.team = msg.data
+
 	def callback_update_score(self,msg): self.scoreValue = msg.data
 		
 	def callback_update_timer(self,msg): self.timerValue = msg.data

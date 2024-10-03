@@ -30,7 +30,7 @@ class motorsPrepareNode(Node):
 		#self.publisherMotor3 = self.create_publisher(Int16, '/motors/cmd/motor_3', 10)
 		
 		# ROS2 subscribers
-		self.subscriberCmdVel = self.create_subscription(Twist, '/smoothed_cmd_vel', self.callback_update_cmd_vel, 10)
+		self.subscriberCmdVel = self.create_subscription(Twist, '/cmd_vel', self.callback_update_cmd_vel, 10)
 		
 		# Timer init
 		#self.timerTimer = self.create_timer(1, self.timer_timer_callback)
@@ -43,10 +43,10 @@ class motorsPrepareNode(Node):
 		cmdVelVrz = msg.angular.z
 		motor1Msg = Int16()
 		motor2Msg = Int16()
-		self.get_logger().info('linear')
-		self.get_logger().info(str(cmdVelVx))
-		self.get_logger().info('angular')
-		self.get_logger().info(str(cmdVelVrz))
+		#self.get_logger().info('linear')
+		#self.get_logger().info(str(cmdVelVx))
+		#self.get_logger().info('angular')
+		#self.get_logger().info(str(cmdVelVrz))
 		#self.get_logger().info(str((cmdVelVx + self.wheelDistance/2 * cmdVelVrz)/51*(self.wheelDiameter/2*1.5*10)))
 		motor1Msg.data = int(-(cmdVelVx - self.wheelDistance/2 * cmdVelVrz)*51/(self.wheelDiameter/2*1.5*10))
 		motor2Msg.data = int((cmdVelVx + self.wheelDistance/2 * cmdVelVrz)*51/(self.wheelDiameter/2*1.5*10))

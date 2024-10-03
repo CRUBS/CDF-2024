@@ -13,7 +13,7 @@ import rclpy
 from rclpy.node import Node
 import time
 
-from std_msgs.msg import Int16, Int16MultiArray, Bool, String
+from std_msgs.msg import Int16, Int16MultiArray, Bool
 
 class servoPrepareNode(Node):
 	def __init__(self):
@@ -24,12 +24,11 @@ class servoPrepareNode(Node):
 		# ferme pot
 		# ouvert
 		# defaut #55 au lieu de 70
-		self.team = 'bleu'
 		self.posPick = [[150,30],[130,50],[110,45],[180,0]]
 		self.posElev = [10, 60, 100, 150]
 		self.posSolar = [0, 130]
 		# Asc Pince Pince 0 Asc Pince Pince
-		self.servoCmd = [10,180,0,0,10,180,0,0,0,90,0,0,0,0,0,0,0]
+		self.servoCmd = [10,180,0,0,10,180,0,0,0,0,0,0,0,0,0,0,0]
 
 		# ROS2 publishers
 		self.publisherServos = self.create_publisher(Int16MultiArray, '/servos', 10)
@@ -37,7 +36,6 @@ class servoPrepareNode(Node):
 		# ROS2 Subscribers
 		self.subscriptionServos = self.create_subscription(Int16MultiArray, '/servos_cmd', self.callback_update_servos, 10)
 		self.subscriptionSolarWheelState = self.create_subscription(Bool, '/solar_wheel_state', self.callback_update_solar, 10)
-		self.subscriptionTeam = self.create_subscription(String, '/team', self.callback_update_team, 10)
 
 		# Timer init
 		self.timerTimer = self.create_timer(0.5, self.timer_servos_callback)
@@ -45,21 +43,8 @@ class servoPrepareNode(Node):
 		# Timer value init
 		self.timerValue = 0
 
-	def callback_update_team(self, msg): self.team = str(msg.data)
+	def callback_update_solar(self, msg): self.servoCmd[8] = self.posSolar[int(msg.data)]
 
-	def callback_update_solar(self, msg): 
-		if self.team in ['bleu', 'Bleu', 'BLEU', 'Blue', 'BLUE', 'blue']:
-			self.servoCmd[9] = 0
-			if msg.data:
-				self.servoCmd[9] = 180
-		elif self.team in ['jaune', 'Jaune', 'JAUNE', 'Yellow', 'yellow', 'YELLOW']:
-			self.servoCmd[9] = 180
-			if msg.data:
-				self.servoCmd[9] = 0
-		else:
-			self.servoCmd[9] = 90
-
-	
 	def callback_update_servos(self,msg):
 		servoCmdMsg = msg.data
 		servoCmdMsg1 = servoCmdMsg[0]
@@ -147,20 +132,6 @@ class servoPrepareNode(Node):
 				self.servoCmd[4] = int(self.posElev[3])
 				self.servoCmd[5] = int(self.posPick[3][0])
 				self.servoCmd[6] = int(self.posPick[3][1])
-
-		servoCmdMsg3 = servoCmdMsg[2] #pos bras panneaux solaire
-		match int(servoCmdMsg3):
-			case 0:
-				self.servoCmd[8] = 0
-			case 1:
-				self.servoCmd[8] = 75
-			case 2:
-				self.servoCmd[8] = 60
-			case _:
-				self.servoCmd[8] = 0
-
-
-
 
 	def timer_servos_callback(self):
 		msgToSend = Int16MultiArray()
