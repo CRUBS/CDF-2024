@@ -20,15 +20,16 @@ class servoPrepareNode(Node):
 		super().__init__('servosPrepare')
 
 		# Definitions of the poses of the servos
-		# ferme plante
-		# ferme pot
-		# ouvert
-		# defaut #55 au lieu de 70
 		self.team = 'bleu'
+
+		#Valeurs correspondantes à des positions définies pour des serrages spécifiques des préhenseurs, chaque braket correspond à un servo
 		self.posPick = [[150,30],[130,50],[110,45],[180,0]]
+		#Valeurs correspondantes à des positions définies pour la hauteur des ascenseurs, chaque braket correspond à un servo
 		self.posElev = [10, 60, 100, 150]
-		self.posSolar = [0, 130]
-		# Asc Pince Pince 0 Asc Pince Pince
+		
+		#self.posSolar = [0, 130]
+		
+		# Chaque nombre correspond à une valeur de sortie d'un pin de la carte de servos soit dans l'ordre : Ascenceur Pince Pince 0 Ascenceur Pince Pince 
 		self.servoCmd = [10,180,0,0,10,180,0,0,0,90,0,0,0,0,0,0,0]
 
 		# ROS2 publishers
@@ -36,7 +37,7 @@ class servoPrepareNode(Node):
 
 		# ROS2 Subscribers
 		self.subscriptionServos = self.create_subscription(Int16MultiArray, '/servos_cmd', self.callback_update_servos, 10)
-		self.subscriptionSolarWheelState = self.create_subscription(Bool, '/solar_wheel_state', self.callback_update_solar, 10)
+		#self.subscriptionSolarWheelState = self.create_subscription(Bool, '/solar_wheel_state', self.callback_update_solar, 10)
 		self.subscriptionTeam = self.create_subscription(String, '/team', self.callback_update_team, 10)
 
 		# Timer init
@@ -63,6 +64,7 @@ class servoPrepareNode(Node):
 	def callback_update_servos(self,msg):
 		servoCmdMsg = msg.data
 		servoCmdMsg1 = servoCmdMsg[0]
+		#Chaque cas correspond à une utilisation des préhenseurs
 		match int(servoCmdMsg1):
 			# Ouvre les pinces avec les plantes avec la pince en pos basse
 			case 0:
